@@ -148,6 +148,34 @@ app.post('/api/create-checkout', ClerkExpressRequireAuth(), async (req, res) => 
   }
 });
 
+// Create billing portal session
+app.post('/api/create-portal-session', ClerkExpressRequireAuth(), async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+
+    const { data: user } = await supabase
+      .from('users')
+      .select('stripe_customer_id')
+      .eq('clerk_user_id', userId)
+      .single();
+
+    if (!user?.stripe_customer_id) {
+      return res.status(400).json({ error: 'No billing account found. Subscribe to a plan first.' });
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: user.stripe_customer_id,
+      return_url: process.env.APP_URL || 'http://localhost:3000'
+    });
+
+    res.json({ url: session.url });
+
+  } catch (error) {
+    console.error('Portal session error:', error);
+    res.status(500).json({ error: 'Failed to create billing portal session' });
+  }
+});
+
 // Stripe webhook
 app.post('/api/stripe-webhook', async (req, res) => {
   const sig = req.headers['stripe-signature'];
