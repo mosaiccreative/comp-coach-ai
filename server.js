@@ -171,10 +171,6 @@ app.get('/api/news', async (req, res) => {
         category: categorize(article.title),
         gradient: gradients[idx % gradients.length]
       }));
-        time: getRelativeTime(article.publishedAt),
-        category: categorize(article.title),
-        gradient: gradients[idx % gradients.length]
-      }));
 
     res.json(news);
 
