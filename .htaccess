@@ -1,0 +1,18 @@
+# DreamHost Passenger configuration for Node.js
+PassengerEnabled on
+PassengerAppRoot /home/username/compcoach.ai
+PassengerBaseURI /
+PassengerAppType node
+PassengerStartupFile server.js
+PassengerNodejs /usr/bin/node
+
+# Handle API routes
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^api/(.*)$ /api/$1 [L,QSA]
+
+# Serve static files
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /index.html [L,QSA]

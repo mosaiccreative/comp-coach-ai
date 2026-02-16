@@ -1,0 +1,2535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CompCoach.ai - Your Personal Compensation Advisor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        body { 
+            background: linear-gradient(135deg, #f8fafb 0%, #e8f4f8 100%);
+            color: #1a202c;
+            overflow-x: hidden;
+        }
+        
+        /* Subtle background pattern */
+        .pattern-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(99, 179, 237, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(129, 230, 217, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Card styles */
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(45, 125, 210, 0.15);
+        }
+        
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(45, 125, 210, 0.25);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(45, 125, 210, 0.35);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #2d7dd2;
+            border: 2px solid #2d7dd2;
+            padding: 12px 26px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: #2d7dd2;
+            color: white;
+        }
+        
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Line clamp */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        /* News card */
+        .news-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .news-card:hover {
+            transform: scale(1.03);
+        }
+        
+        /* Input styles */
+        input, select {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            position: relative;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2d7dd2 0%, #1ba098 100%);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+        }
+
+        /* Tooltip */
+        .tooltip-wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .tooltip-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            background: #cbd5e1;
+            color: #475569;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            cursor: help;
+            margin-left: 6px;
+            flex-shrink: 0;
+        }
+
+        .tooltip-box {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 0;
+            background: #1e293b;
+            color: white;
+            font-size: 12px;
+            font-weight: 400;
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 260px;
+            z-index: 100;
+            line-height: 1.5;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .tooltip-box::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 14px;
+            border: 6px solid transparent;
+            border-top-color: #1e293b;
+        }
+
+        .tooltip-wrapper:hover .tooltip-box {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Coach character floating animation */
+        .coach-float {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="pattern-bg"></div>
+    <div id="root" style="position: relative; z-index: 2;"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Job functions with their job families
+        const jobFunctions = {
+            "Engineering, Product & Design": [
+                "Software Engineer",
+                "Frontend Engineer",
+                "Backend Engineer",
+                "Full Stack Engineer",
+                "Mobile Engineer",
+                "Site Reliability Engineer",
+                "DevOps Engineer",
+                "Data Engineer",
+                "Machine Learning Engineer",
+                "Security Engineer",
+                "QA Engineer",
+                "Technical Program Manager",
+                "Product Manager",
+                "Product Analyst",
+                "UX Designer",
+                "Product Designer",
+                "UX Researcher",
+                "Visual Designer",
+            ],
+            "IT": [
+                "IT Support Specialist",
+                "Systems Administrator",
+                "Network Engineer",
+                "Cloud Infrastructure Engineer",
+                "Cybersecurity Analyst",
+                "Information Security Engineer",
+                "IT Project Manager",
+            ],
+            "Sales": [
+                "Sales Development Representative",
+                "Account Executive",
+                "Enterprise Account Executive",
+                "Solutions Engineer",
+                "Sales Operations Analyst",
+                "Revenue Operations Manager",
+                "Account Manager",
+                "Business Development Representative",
+            ],
+            "Customer Support": [
+                "Customer Support Specialist",
+                "Customer Success Manager",
+                "Technical Support Engineer",
+                "Implementation Manager",
+                "Onboarding Specialist",
+            ],
+            "Marketing": [
+                "Marketing Analyst",
+                "Content Marketing Manager",
+                "Growth Marketing Manager",
+                "Product Marketing Manager",
+                "Brand Manager",
+                "Demand Generation Manager",
+                "Marketing Operations Manager",
+                "Social Media Manager",
+                "SEO Specialist",
+            ],
+            "Finance": [
+                "Financial Analyst",
+                "FP&A Analyst",
+                "Accounting Analyst",
+                "Revenue Analyst",
+                "Finance Business Partner",
+                "Tax Analyst",
+                "Treasury Analyst",
+            ],
+            "HR": [
+                "HR Coordinator",
+                "HR Business Partner",
+                "Recruiter",
+                "Technical Recruiter",
+                "Compensation Analyst",
+                "People Operations Specialist",
+                "Learning & Development Specialist",
+                "HR Analyst",
+            ],
+            "Business Operations": [
+                "Business Analyst",
+                "Business Operations Manager",
+                "Strategy & Operations Manager",
+                "Program Manager",
+                "Project Manager",
+                "Chief of Staff",
+                "Data Analyst",
+            ],
+            "Legal": [
+                "Paralegal",
+                "Corporate Counsel",
+                "Employment Counsel",
+                "Privacy Counsel",
+                "Contracts Manager",
+            ],
+        };
+
+        // Market data - job family baselines (level multipliers applied separately)
+        const marketData = {
+            // Engineering, Product & Design
+            "Software Engineer":              { median: 130000, p25: 100000, p75: 160000, p90: 190000, equity_typical: 25000, bonus_typical: 15 },
+            "Frontend Engineer":              { median: 125000, p25: 96000,  p75: 155000, p90: 184000, equity_typical: 22000, bonus_typical: 15 },
+            "Backend Engineer":               { median: 132000, p25: 102000, p75: 162000, p90: 192000, equity_typical: 26000, bonus_typical: 15 },
+            "Full Stack Engineer":            { median: 128000, p25: 98000,  p75: 158000, p90: 188000, equity_typical: 24000, bonus_typical: 15 },
+            "Mobile Engineer":                { median: 130000, p25: 100000, p75: 160000, p90: 190000, equity_typical: 25000, bonus_typical: 15 },
+            "Site Reliability Engineer":      { median: 145000, p25: 115000, p75: 178000, p90: 210000, equity_typical: 32000, bonus_typical: 15 },
+            "DevOps Engineer":                { median: 135000, p25: 105000, p75: 165000, p90: 195000, equity_typical: 26000, bonus_typical: 12 },
+            "Data Engineer":                  { median: 138000, p25: 108000, p75: 168000, p90: 198000, equity_typical: 28000, bonus_typical: 12 },
+            "Machine Learning Engineer":      { median: 160000, p25: 130000, p75: 195000, p90: 230000, equity_typical: 50000, bonus_typical: 15 },
+            "Security Engineer":              { median: 145000, p25: 112000, p75: 178000, p90: 210000, equity_typical: 28000, bonus_typical: 12 },
+            "QA Engineer":                    { median: 105000, p25: 80000,  p75: 130000, p90: 155000, equity_typical: 15000, bonus_typical: 10 },
+            "Technical Program Manager":      { median: 150000, p25: 118000, p75: 183000, p90: 218000, equity_typical: 35000, bonus_typical: 18 },
+            "Product Manager":                { median: 138000, p25: 108000, p75: 168000, p90: 200000, equity_typical: 32000, bonus_typical: 20 },
+            "Product Analyst":                { median: 100000, p25: 78000,  p75: 123000, p90: 148000, equity_typical: 15000, bonus_typical: 12 },
+            "UX Designer":                    { median: 108000, p25: 83000,  p75: 133000, p90: 158000, equity_typical: 16000, bonus_typical: 12 },
+            "Product Designer":               { median: 118000, p25: 92000,  p75: 145000, p90: 172000, equity_typical: 20000, bonus_typical: 12 },
+            "UX Researcher":                  { median: 115000, p25: 88000,  p75: 142000, p90: 168000, equity_typical: 18000, bonus_typical: 10 },
+            "Visual Designer":                { median: 95000,  p25: 72000,  p75: 118000, p90: 140000, equity_typical: 12000, bonus_typical: 10 },
+            // IT
+            "IT Support Specialist":          { median: 62000,  p25: 48000,  p75: 76000,  p90: 92000,  equity_typical: 5000,  bonus_typical: 8 },
+            "Systems Administrator":          { median: 88000,  p25: 68000,  p75: 108000, p90: 128000, equity_typical: 8000,  bonus_typical: 8 },
+            "Network Engineer":               { median: 102000, p25: 80000,  p75: 125000, p90: 148000, equity_typical: 10000, bonus_typical: 10 },
+            "Cloud Infrastructure Engineer":  { median: 142000, p25: 112000, p75: 174000, p90: 206000, equity_typical: 26000, bonus_typical: 12 },
+            "Cybersecurity Analyst":          { median: 112000, p25: 87000,  p75: 138000, p90: 162000, equity_typical: 12000, bonus_typical: 10 },
+            "Information Security Engineer":  { median: 138000, p25: 108000, p75: 168000, p90: 198000, equity_typical: 22000, bonus_typical: 12 },
+            "IT Project Manager":             { median: 110000, p25: 86000,  p75: 135000, p90: 160000, equity_typical: 12000, bonus_typical: 12 },
+            // Sales
+            "Sales Development Representative": { median: 65000, p25: 50000, p75: 80000, p90: 96000, equity_typical: 5000,  bonus_typical: 40 },
+            "Account Executive":              { median: 115000, p25: 85000,  p75: 150000, p90: 192000, equity_typical: 18000, bonus_typical: 50 },
+            "Enterprise Account Executive":   { median: 160000, p25: 120000, p75: 208000, p90: 260000, equity_typical: 38000, bonus_typical: 50 },
+            "Solutions Engineer":             { median: 148000, p25: 118000, p75: 180000, p90: 212000, equity_typical: 30000, bonus_typical: 20 },
+            "Sales Operations Analyst":       { median: 92000,  p25: 72000,  p75: 114000, p90: 136000, equity_typical: 10000, bonus_typical: 12 },
+            "Revenue Operations Manager":     { median: 128000, p25: 100000, p75: 158000, p90: 188000, equity_typical: 22000, bonus_typical: 15 },
+            "Account Manager":                { median: 98000,  p25: 75000,  p75: 122000, p90: 148000, equity_typical: 12000, bonus_typical: 25 },
+            "Business Development Representative": { median: 68000, p25: 52000, p75: 84000, p90: 100000, equity_typical: 6000, bonus_typical: 35 },
+            // Customer Support
+            "Customer Support Specialist":    { median: 56000,  p25: 44000,  p75: 69000,  p90: 82000,  equity_typical: 3000,  bonus_typical: 8 },
+            "Customer Success Manager":       { median: 95000,  p25: 74000,  p75: 118000, p90: 140000, equity_typical: 14000, bonus_typical: 15 },
+            "Technical Support Engineer":     { median: 92000,  p25: 72000,  p75: 113000, p90: 135000, equity_typical: 10000, bonus_typical: 10 },
+            "Implementation Manager":         { median: 105000, p25: 82000,  p75: 130000, p90: 155000, equity_typical: 15000, bonus_typical: 12 },
+            "Onboarding Specialist":          { median: 72000,  p25: 56000,  p75: 89000,  p90: 106000, equity_typical: 6000,  bonus_typical: 10 },
+            // Marketing
+            "Marketing Analyst":              { median: 78000,  p25: 60000,  p75: 97000,  p90: 115000, equity_typical: 8000,  bonus_typical: 10 },
+            "Content Marketing Manager":      { median: 92000,  p25: 72000,  p75: 114000, p90: 135000, equity_typical: 10000, bonus_typical: 10 },
+            "Growth Marketing Manager":       { median: 112000, p25: 88000,  p75: 138000, p90: 164000, equity_typical: 15000, bonus_typical: 12 },
+            "Product Marketing Manager":      { median: 128000, p25: 100000, p75: 156000, p90: 185000, equity_typical: 22000, bonus_typical: 15 },
+            "Brand Manager":                  { median: 102000, p25: 80000,  p75: 125000, p90: 148000, equity_typical: 12000, bonus_typical: 10 },
+            "Demand Generation Manager":      { median: 118000, p25: 92000,  p75: 145000, p90: 172000, equity_typical: 18000, bonus_typical: 12 },
+            "Marketing Operations Manager":   { median: 108000, p25: 84000,  p75: 133000, p90: 158000, equity_typical: 14000, bonus_typical: 12 },
+            "Social Media Manager":           { median: 78000,  p25: 60000,  p75: 97000,  p90: 115000, equity_typical: 7000,  bonus_typical: 8 },
+            "SEO Specialist":                 { median: 82000,  p25: 63000,  p75: 102000, p90: 120000, equity_typical: 7000,  bonus_typical: 8 },
+            // Finance
+            "Financial Analyst":              { median: 88000,  p25: 68000,  p75: 108000, p90: 128000, equity_typical: 10000, bonus_typical: 12 },
+            "FP&A Analyst":                   { median: 95000,  p25: 74000,  p75: 117000, p90: 138000, equity_typical: 12000, bonus_typical: 15 },
+            "Accounting Analyst":             { median: 78000,  p25: 60000,  p75: 96000,  p90: 114000, equity_typical: 7000,  bonus_typical: 10 },
+            "Revenue Analyst":                { median: 90000,  p25: 70000,  p75: 111000, p90: 132000, equity_typical: 10000, bonus_typical: 12 },
+            "Finance Business Partner":       { median: 138000, p25: 108000, p75: 168000, p90: 200000, equity_typical: 24000, bonus_typical: 18 },
+            "Tax Analyst":                    { median: 86000,  p25: 66000,  p75: 106000, p90: 126000, equity_typical: 8000,  bonus_typical: 10 },
+            "Treasury Analyst":               { median: 92000,  p25: 72000,  p75: 113000, p90: 135000, equity_typical: 10000, bonus_typical: 12 },
+            // HR
+            "HR Coordinator":                 { median: 58000,  p25: 46000,  p75: 72000,  p90: 86000,  equity_typical: 4000,  bonus_typical: 8 },
+            "HR Business Partner":            { median: 108000, p25: 84000,  p75: 133000, p90: 158000, equity_typical: 16000, bonus_typical: 12 },
+            "Recruiter":                      { median: 78000,  p25: 60000,  p75: 97000,  p90: 115000, equity_typical: 8000,  bonus_typical: 10 },
+            "Technical Recruiter":            { median: 92000,  p25: 72000,  p75: 114000, p90: 136000, equity_typical: 12000, bonus_typical: 12 },
+            "Compensation Analyst":           { median: 98000,  p25: 76000,  p75: 121000, p90: 143000, equity_typical: 13000, bonus_typical: 12 },
+            "People Operations Specialist":   { median: 80000,  p25: 62000,  p75: 99000,  p90: 118000, equity_typical: 8000,  bonus_typical: 10 },
+            "Learning & Development Specialist": { median: 82000, p25: 64000, p75: 102000, p90: 120000, equity_typical: 8000, bonus_typical: 10 },
+            "HR Analyst":                     { median: 78000,  p25: 60000,  p75: 97000,  p90: 115000, equity_typical: 8000,  bonus_typical: 10 },
+            // Business Operations
+            "Business Analyst":               { median: 90000,  p25: 70000,  p75: 111000, p90: 132000, equity_typical: 10000, bonus_typical: 12 },
+            "Business Operations Manager":    { median: 128000, p25: 100000, p75: 158000, p90: 188000, equity_typical: 22000, bonus_typical: 15 },
+            "Strategy & Operations Manager":  { median: 138000, p25: 108000, p75: 168000, p90: 200000, equity_typical: 26000, bonus_typical: 18 },
+            "Program Manager":                { median: 128000, p25: 100000, p75: 156000, p90: 185000, equity_typical: 20000, bonus_typical: 15 },
+            "Project Manager":                { median: 108000, p25: 84000,  p75: 133000, p90: 158000, equity_typical: 14000, bonus_typical: 12 },
+            "Chief of Staff":                 { median: 172000, p25: 138000, p75: 210000, p90: 250000, equity_typical: 45000, bonus_typical: 20 },
+            "Data Analyst":                   { median: 88000,  p25: 68000,  p75: 108000, p90: 128000, equity_typical: 10000, bonus_typical: 10 },
+            // Legal
+            "Paralegal":                      { median: 66000,  p25: 52000,  p75: 82000,  p90: 98000,  equity_typical: 5000,  bonus_typical: 8 },
+            "Corporate Counsel":              { median: 185000, p25: 148000, p75: 228000, p90: 270000, equity_typical: 55000, bonus_typical: 20 },
+            "Employment Counsel":             { median: 195000, p25: 158000, p75: 240000, p90: 285000, equity_typical: 62000, bonus_typical: 20 },
+            "Privacy Counsel":                { median: 190000, p25: 152000, p75: 233000, p90: 276000, equity_typical: 58000, bonus_typical: 20 },
+            "Contracts Manager":              { median: 110000, p25: 86000,  p75: 135000, p90: 160000, equity_typical: 14000, bonus_typical: 12 },
+        };
+
+        // Level multipliers (1 = entry, 6 = principal)
+        const levelMultipliers = {
+            1: 0.7,   // Entry level
+            2: 0.85,  // Junior
+            3: 1.0,   // Mid-level (baseline)
+            4: 1.25,  // Senior
+            5: 1.5,   // Staff/Lead
+            6: 1.8,   // Principal
+        };
+
+        // Management track multipliers
+        const trackMultipliers = {
+            "Individual Contributor": 1.0,
+            "Manager": 1.15,
+            "Executive": 1.6,
+        };
+
+        const locationAdjustments = {
+            "San Francisco, CA": 1.4, "New York, NY": 1.35, "Seattle, WA": 1.25,
+            "Austin, TX": 1.1, "Denver, CO": 1.05, "Chicago, IL": 1.08,
+            "Boston, MA": 1.2, "Los Angeles, CA": 1.25, "Remote": 1.0, "Other": 1.0,
+        };
+
+        // Sample news data
+        // News state - will fetch from API when live
+        const sampleNews = [
+            {
+                title: "Tech Salaries Surge 15% in Q1 2026",
+                source: "LinkedIn Talent Blog",
+                time: "2 hours ago",
+                excerpt: "Software engineering compensation packages see unprecedented growth as AI demand accelerates...",
+                category: "Market Trends",
+                gradient: "from-blue-400 to-cyan-500",
+                url: "https://linkedin.com/business/talent/blog"
+            },
+            {
+                title: "Remote Work Premium Narrows to 5%",
+                source: "Compensation Insider",
+                time: "5 hours ago",
+                excerpt: "New data shows remote positions now command only a 5% premium over hybrid roles...",
+                category: "Remote Work",
+                gradient: "from-purple-400 to-pink-500",
+                url: "https://www.shrm.org"
+            },
+            {
+                title: "Equity Compensation: RSUs vs Options in 2026",
+                source: "X (Twitter)",
+                time: "1 day ago",
+                excerpt: "Top VCs weigh in on the shift from stock options to RSUs in startup compensation...",
+                category: "Equity",
+                gradient: "from-emerald-400 to-teal-500",
+                url: "https://twitter.com"
+            },
+            {
+                title: "Gender Pay Gap Narrows to 8% in Tech",
+                source: "Harvard Business Review",
+                time: "1 day ago",
+                excerpt: "Progress continues as transparency laws drive equity in compensation practices...",
+                category: "Pay Equity",
+                gradient: "from-orange-400 to-red-500",
+                url: "https://hbr.org"
+            },
+            {
+                title: "Negotiation Tactics That Backfire in 2026",
+                source: "LinkedIn",
+                time: "2 days ago",
+                excerpt: "HR leaders reveal the most common mistakes candidates make during salary negotiations...",
+                category: "Negotiation",
+                gradient: "from-indigo-400 to-violet-500",
+                url: "https://linkedin.com"
+            },
+        ];
+
+        // Coach Character SVG Component
+        const CoachCharacter = ({ size = 200, animated = false }) => (
+            <svg 
+                width={size} 
+                height={size} 
+                viewBox="0 0 200 200" 
+                className={animated ? "coach-float" : ""}
+            >
+                {/* Head */}
+                <circle cx="100" cy="70" r="35" fill="#2d7dd2" opacity="0.9"/>
+                
+                {/* Body */}
+                <ellipse cx="100" cy="130" rx="40" ry="50" fill="#1ba098" opacity="0.9"/>
+                
+                {/* Arms */}
+                <ellipse cx="65" cy="120" rx="12" ry="35" fill="#1ba098" opacity="0.9" transform="rotate(-20 65 120)"/>
+                <ellipse cx="135" cy="120" rx="12" ry="35" fill="#1ba098" opacity="0.9" transform="rotate(20 135 120)"/>
+                
+                {/* Legs */}
+                <rect x="85" y="165" width="12" height="30" rx="6" fill="#2d7dd2" opacity="0.9"/>
+                <rect x="103" y="165" width="12" height="30" rx="6" fill="#2d7dd2" opacity="0.9"/>
+                
+                {/* Face - Eyes */}
+                <circle cx="90" cy="65" r="4" fill="white"/>
+                <circle cx="110" cy="65" r="4" fill="white"/>
+                <circle cx="91" cy="65" r="2" fill="#1a202c"/>
+                <circle cx="111" cy="65" r="2" fill="#1a202c"/>
+                
+                {/* Smile */}
+                <path d="M 88 78 Q 100 85 112 78" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                
+                {/* Whistle */}
+                <circle cx="125" cy="95" r="8" fill="#fbbf24" opacity="0.9"/>
+                <rect x="133" y="92" width="15" height="6" fill="#fbbf24" opacity="0.9"/>
+                <circle cx="148" cy="95" r="2" fill="#1a202c"/>
+                
+                {/* Clipboard */}
+                <rect x="55" y="110" width="20" height="28" rx="2" fill="white" stroke="#cbd5e1" strokeWidth="2"/>
+                <line x1="60" y1="118" x2="70" y2="118" stroke="#94a3b8" strokeWidth="2"/>
+                <line x1="60" y1="125" x2="70" y2="125" stroke="#94a3b8" strokeWidth="2"/>
+                <line x1="60" y1="132" x2="70" y2="132" stroke="#94a3b8" strokeWidth="2"/>
+            </svg>
+        );
+
+        // ─── Market Tab Component ─────────────────────────────────────────────
+        const MarketTab = ({ jobFunctions, marketData, levelMultipliers, trackMultipliers, locationAdjustments }) => {
+            const [mktTrack,    setMktTrack]    = useState('Individual Contributor');
+            const [mktLevel,    setMktLevel]    = useState('3');
+            const [mktLocation, setMktLocation] = useState('Remote');
+            const [openJobs,    setOpenJobs]    = useState({});   // { "Software Engineer": true }
+            const [openFns,     setOpenFns]     = useState(
+                Object.fromEntries(Object.keys(jobFunctions).map(fn => [fn, true]))
+            );
+
+            const toggleJob = (title) => setOpenJobs(prev => ({ ...prev, [title]: !prev[title] }));
+            const toggleFn  = (fn)    => setOpenFns(prev  => ({ ...prev, [fn]:    !prev[fn]    }));
+
+            // Compute adjusted values for a job given current filters
+            const compute = (base) => {
+                const locMult   = locationAdjustments[mktLocation] || 1.0;
+                const lvlMult   = levelMultipliers[parseInt(mktLevel)];
+                const trkMult   = trackMultipliers[mktTrack];
+                const mult      = locMult * lvlMult * trkMult;
+                const bonusPct  = base.bonus_typical / 100;
+                const equity    = base.equity_typical * mult;
+
+                const base25    = Math.round(base.p25    * mult);
+                const baseMed   = Math.round(base.median * mult);
+                const base75    = Math.round(base.p75    * mult);
+                const base90    = Math.round(base.p90    * mult);
+
+                const tc25      = Math.round(base25  + base25  * bonusPct + equity);
+                const tcMed     = Math.round(baseMed + baseMed * bonusPct + equity);
+                const tc75      = Math.round(base75  + base75  * bonusPct + equity);
+                const tc90      = Math.round(base90  + base90  * bonusPct + equity);
+
+                return {
+                    base: { p25: base25, median: baseMed, p75: base75, p90: base90 },
+                    tc:   { p25: tc25,   median: tcMed,   p75: tc75,   p90: tc90   },
+                    bonusPct: base.bonus_typical,
+                    equity: Math.round(equity),
+                };
+            };
+
+            const levelLabels = {
+                '1': '1 – Entry Level', '2': '2 – Junior', '3': '3 – Mid-Level',
+                '4': '4 – Senior',      '5': '5 – Staff / Lead', '6': '6 – Principal',
+            };
+
+            const fmt = (n) => '$' + n.toLocaleString();
+
+            const PercentileRow = ({ label, base, tc, highlight }) => (
+                <div className={`grid grid-cols-3 gap-3 py-2.5 border-b border-gray-100 last:border-b-0 ${highlight ? 'bg-blue-50 -mx-2 px-2 rounded-lg' : ''}`}>
+                    <span className="text-sm font-semibold text-gray-600">{label}</span>
+                    <span className={`text-sm font-bold text-right ${highlight ? 'gradient-text' : 'text-gray-900'}`}>{fmt(base)}</span>
+                    <span className={`text-sm font-bold text-right ${highlight ? 'gradient-text' : 'text-gray-900'}`}>{fmt(tc)}</span>
+                </div>
+            );
+
+            return (
+                <div className="space-y-6 fade-in">
+
+                    {/* ── Filter Bar ── */}
+                    <div className="card p-6">
+                        <h2 className="text-2xl font-bold text-gray-900 mb-5">Market Intelligence</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Career Track</label>
+                                <select
+                                    value={mktTrack}
+                                    onChange={e => setMktTrack(e.target.value)}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                >
+                                    {Object.keys(trackMultipliers).map(t => (
+                                        <option key={t} value={t}>{t}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Level</label>
+                                <select
+                                    value={mktLevel}
+                                    onChange={e => setMktLevel(e.target.value)}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                >
+                                    {Object.entries(levelLabels).map(([v, l]) => (
+                                        <option key={v} value={v}>{l}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                                <select
+                                    value={mktLocation}
+                                    onChange={e => setMktLocation(e.target.value)}
+                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                >
+                                    {Object.keys(locationAdjustments).map(loc => (
+                                        <option key={loc} value={loc}>{loc}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-3">
+                            All figures update instantly. Showing data for <strong>{mktTrack}</strong>, Level {mktLevel}, <strong>{mktLocation}</strong>.
+                        </p>
+                    </div>
+
+                    {/* ── Function Accordions ── */}
+                    {Object.entries(jobFunctions).map(([fn, titles]) => (
+                        <div key={fn} className="card overflow-hidden">
+
+                            {/* Function header — click to collapse/expand entire function */}
+                            <button
+                                onClick={() => toggleFn(fn)}
+                                className="w-full flex items-center justify-between px-6 py-4 bg-gradient-to-r from-blue-500 to-teal-500 text-white"
+                            >
+                                <span className="font-bold text-base">{fn}</span>
+                                <svg
+                                    className={`w-5 h-5 transition-transform ${openFns[fn] ? 'rotate-180' : ''}`}
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/>
+                                </svg>
+                            </button>
+
+                            {openFns[fn] && (
+                                <div className="divide-y divide-gray-100">
+                                    {titles.map(title => {
+                                        const base = marketData[title];
+                                        if (!base) return null;
+                                        const { base: b, tc, bonusPct, equity } = compute(base);
+                                        const isOpen = !!openJobs[title];
+
+                                        return (
+                                            <div key={title}>
+                                                {/* Job row — click to expand detail */}
+                                                <button
+                                                    onClick={() => toggleJob(title)}
+                                                    className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+                                                >
+                                                    <div>
+                                                        <span className="font-semibold text-gray-900">{title}</span>
+                                                        <span className="ml-3 text-xs text-gray-400">
+                                                            Median: {fmt(b.median)} base · {fmt(tc.median)} TC
+                                                        </span>
+                                                    </div>
+                                                    <svg
+                                                        className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                                                        fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                                    >
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7"/>
+                                                    </svg>
+                                                </button>
+
+                                                {/* Expanded detail */}
+                                                {isOpen && (
+                                                    <div className="px-6 pb-6 bg-gray-50">
+
+                                                        {/* Column headers */}
+                                                        <div className="grid grid-cols-3 gap-3 py-2 mb-1">
+                                                            <span className="text-xs font-bold text-gray-400 uppercase tracking-wide">Percentile</span>
+                                                            <span className="text-xs font-bold text-blue-500 uppercase tracking-wide text-right">Base Salary</span>
+                                                            <span className="text-xs font-bold text-teal-500 uppercase tracking-wide text-right">Total Comp</span>
+                                                        </div>
+
+                                                        <PercentileRow label="25th"         base={b.p25}    tc={tc.p25}    />
+                                                        <PercentileRow label="Median (50th)" base={b.median} tc={tc.median} highlight />
+                                                        <PercentileRow label="75th"          base={b.p75}    tc={tc.p75}    />
+                                                        <PercentileRow label="90th"          base={b.p90}    tc={tc.p90}    />
+
+                                                        {/* Bonus + Equity callouts */}
+                                                        <div className="mt-4 grid grid-cols-2 gap-3">
+                                                            <div className="bg-white rounded-xl p-3 border border-gray-200">
+                                                                <p className="text-xs text-gray-500 font-semibold mb-1">Bonus Target</p>
+                                                                <p className="text-lg font-bold text-gray-900">{bonusPct}%</p>
+                                                                <p className="text-xs text-gray-400">of base salary</p>
+                                                            </div>
+                                                            <div className="bg-white rounded-xl p-3 border border-gray-200">
+                                                                <p className="text-xs text-gray-500 font-semibold mb-1">Annual Equity</p>
+                                                                <p className="text-lg font-bold text-gray-900">{fmt(equity)}</p>
+                                                                <p className="text-xs text-gray-400">annualized run rate</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            );
+        };
+        // ─────────────────────────────────────────────────────────────────────
+
+        const CompCoachApp = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [subscriptionTier, setSubscriptionTier] = useState('free');
+            const [showPaywall, setShowPaywall] = useState(false);
+            
+            // News state - fetched from API
+            const [news, setNews] = useState(sampleNews); // Start with static data
+            const [selectedArticle, setSelectedArticle] = useState(null);
+            
+            // Fetch live news on mount
+            useEffect(() => {
+                fetch('/api/news')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            setNews(data);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to load news:', err);
+                        // Keep static news on error
+                    });
+            }, []);
+            
+            // Analysis state
+            const [jobTitle, setJobTitle] = useState('');
+            const [company, setCompany] = useState('');
+            const [currentSalary, setCurrentSalary] = useState('');
+            const [location, setLocation] = useState('');
+            const [yearsExp, setYearsExp] = useState('');
+            const [managementTrack, setManagementTrack] = useState('');
+            const [level, setLevel] = useState('');
+            const [bonusTarget, setBonusTarget] = useState('');
+            const [annualEquity, setAnnualEquity] = useState('');
+            const [analysisResult, setAnalysisResult] = useState(null);
+            
+            // Chat state
+            const [messages, setMessages] = useState([
+                { role: 'assistant', content: "Hi! I'm your AI compensation coach. Run the Compensation Analyzer first and I'll have your full profile loaded — then ask me anything about your pay, a new offer, or how to negotiate." }
+            ]);
+            const [inputMessage, setInputMessage] = useState('');
+            const [isTyping, setIsTyping] = useState(false);
+            const [uploadedFile, setUploadedFile] = useState(null);   // { name, type, base64, preview }
+            const [uploadError, setUploadError] = useState('');
+            const fileInputRef = useRef(null);
+            const chatEndRef = useRef(null);
+            const analysisInjectedRef = useRef(false);
+            
+            // Learn articles data
+            const learnArticles = [
+                {
+                    id: 'total-comp-employer',
+                    title: 'Understanding Total Comp from the Employer\'s Perspective',
+                    subtitle: 'Intended vs. Realized Compensation',
+                    category: 'Compensation Basics',
+                    readTime: '8 min read',
+                    publishDate: 'February 10, 2026',
+                    excerpt: 'Companies budget for your compensation very differently than you might think. Learn the gap between what they intend to pay and what you actually receive.',
+                    content: `
+# Understanding Total Comp from the Employer's Perspective
+
+When you receive a job offer, the total compensation number looks straightforward: base salary + bonus + equity = total comp. But here's what most employees don't understand: **what the company *intends* to pay you is often very different from what you'll *actually* receive.**
+
+## Intended Compensation
+
+This is what shows up in your offer letter and what HR budgets for. It includes:
+
+- **Base Salary**: The easiest part — this is guaranteed (assuming you keep your job)
+- **Target Bonus**: Notice the word "target." This is the *intended* bonus if you meet expectations. Most companies budget assuming 80-100% payout rates.
+- **Equity Grant Value**: Here's where it gets tricky. The company values your equity grant at the **grant date** using their current valuation.
+
+For example, if you're granted $100K in RSUs at a $50/share price, that's 2,000 shares. The company budgets $100K for your comp package.
+
+## Realized Compensation
+
+This is what you actually take home. Reality often differs:
+
+### Bonus Reality
+- If your company has a 1-5 rating system, statistically 60-70% of employees get a "3" (meets expectations)
+- A "3" might mean 80-100% of target bonus
+- High performers (4s and 5s) might get 120-150%, but they're the minority
+- In tough years, companies can (and do) pay 0% bonuses to preserve cash
+
+### Equity Reality  
+This is where **intended** and **realized** diverge the most:
+
+**For Public Companies:**
+- Your RSUs vest over time (typically 4 years)
+- Stock price fluctuates
+- A $100K grant could be worth $150K (if stock rises) or $40K (if it falls)
+- The company doesn't care — they gave you 2,000 shares, full stop
+
+**For Private Companies:**
+- The equity might never be liquid (company doesn't IPO or get acquired)
+- Even if it becomes liquid, the valuation at exit could be lower than grant
+- That $100K equity grant might realize as $0
+
+## Why This Matters for Negotiations
+
+When you negotiate, companies think in terms of **intended** comp:
+
+- "We're offering you $200K total comp!" (Base: $140K, Bonus: $20K target, Equity: $40K grant value)
+
+But you should think in terms of **realized** comp:
+
+- Actual likely outcome: $140K base + $16K bonus (80% payout) + $25K equity (if you're lucky) = $181K
+
+### The Negotiation Insight
+
+**Ask for more equity or guaranteed compensation (base salary), not target bonus increases.** Here's why:
+
+1. Increasing your target bonus from 15% to 20% sounds great, but you'll likely only see 80% of that
+2. Increasing your equity grant by 500 shares costs the company nothing *today* (they're just diluting shareholders)
+3. Increasing your base salary by $10K costs them $10K guaranteed, so they resist more — but it's the only truly guaranteed comp
+
+## The Bottom Line
+
+Employers budget for best-case scenarios (you hit targets, stock goes up). You should expect middle-case scenarios (you meet expectations, stock stays flat). 
+
+**When evaluating offers, discount the "intended" numbers:**
+- Assume 80% bonus payout
+- Assume equity stays flat or declines
+- Focus on maximizing base salary
+
+The gap between intended and realized compensation is where companies save money and employees get disappointed.
+                    `
+                },
+                {
+                    id: 'comp-ranges-postings',
+                    title: 'Common Misunderstandings with Comp Ranges in Job Postings',
+                    subtitle: 'What "$120K-$180K" Actually Means',
+                    category: 'Job Search',
+                    readTime: '6 min read',
+                    publishDate: 'February 12, 2026',
+                    excerpt: 'Salary ranges in job postings are often misleading. Here\'s what companies really mean when they post that wide range.',
+                    content: `
+# Common Misunderstandings with Comp Ranges in Job Postings
+
+You see a job posting: **"Base Salary: $120,000 - $180,000"**. You have 3 years of experience and think, *"I'll aim for the middle — $150K sounds fair."*
+
+Here's the reality: **you're probably not getting $150K.** And the company knows it.
+
+## Why Companies Post Wide Ranges
+
+There are a few reasons companies publish such wide salary bands:
+
+### 1. Legal Compliance (Pay Transparency Laws)
+Many states (California, New York, Colorado, Washington) now require salary ranges in job postings. Companies comply by posting their **entire job level's range** — not what they'll actually pay *you*.
+
+Example:
+- The role is "Senior Software Engineer" (Level 4)
+- Level 4 at the company spans: $120K (new L4) to $180K (top-of-band L4 with 8 years experience)
+- They're hiring someone with 2-3 years experience
+- **Realistic offer: $125K-$135K**
+
+The $180K top-of-range is reserved for internal promotions or exceptional external hires with deep expertise.
+
+### 2. Negotiation Buffer
+Posting a wide range gives the company flexibility. If they post "$130K-$140K" and you counter at $145K, they have no room. But if they post "$120K-$180K," they can offer $135K, you counter at $150K, they "meet you in the middle" at $142K, and everyone feels like they won.
+
+### 3. Geographic & Experience Flexibility
+The range might account for:
+- Someone in San Francisco (gets $160K) vs. someone remote in Texas (gets $130K)
+- Someone with 2 years experience (gets $125K) vs. someone with 6 years (gets $155K)
+
+But the posting doesn't tell you *which segment of the range applies to you*.
+
+## What the Range Actually Means
+
+Here's how to decode it:
+
+**The bottom 25% of the range ($120K-$135K):**
+- Entry-level for this role
+- Minimal experience or transferring from a different domain
+- Remote location or lower cost-of-living area
+
+**The middle 50% ($135K-$155K):**
+- Target experience level (what the job description asks for)
+- This is where *most* hires land
+- Standard location adjustments
+
+**The top 25% ($155K-$180K):**
+- Exceptional candidate with rare skills
+- Senior end of the level (borderline promotion)
+- High cost-of-living adjustment (SF/NYC)
+- **Or**: Already internal, getting a raise to stay
+
+## The Misunderstandings
+
+### Misunderstanding #1: "The midpoint is what they'll offer"
+**Reality**: The midpoint ($150K) is usually reserved for someone with 4-5 years of experience in the exact role, in a tier-1 location, with strong leverage.
+
+### Misunderstanding #2: "I can negotiate to the top of the range"
+**Reality**: The top 10-15% of the range is *not* on the table for external hires. It's for internal equity (someone who's been there 3 years and is a top performer).
+
+### Misunderstanding #3: "The range includes equity and bonus"
+**Reality**: Sometimes yes, sometimes no. If the posting says **"Total Compensation: $120K-$180K"**, that might include equity. But if it says **"Base Salary"**, it doesn't.
+
+**Always ask**: *"Is this base salary or total compensation?"*
+
+## How to Use the Range in Negotiations
+
+### 1. Anchor in the Middle-to-High Zone
+When they ask your expectations, don't say "the midpoint." Say:
+
+> *"Based on my experience and the responsibilities outlined, I'd be targeting the $145K-$155K range."*
+
+This signals you know the top isn't realistic, but you're aiming above the average.
+
+### 2. Ask What Segment You Fall Into
+During the interview:
+
+> *"I see the range is $120K-$180K. Based on my background, which part of that range would this role likely fall into?"*
+
+This forces them to reveal their budget before you share your number.
+
+### 3. Clarify Location & Level
+> *"Does this range account for remote work, or is it based on SF/NYC salaries?"*
+
+> *"Is this range for the entire level, or specifically for someone with 3 years of experience?"*
+
+## The Bottom Line
+
+When you see a wide salary range:
+- Assume you're in the **25th-60th percentile** of that range unless you're exceptionally qualified
+- The top 20% is usually not available for external hires
+- Always ask clarifying questions: *Base or total? Location-adjusted? Which part applies to my experience level?*
+
+**The range is a starting point, not a promise.** Your goal is to figure out where *you* realistically fall — and then negotiate up from there.
+                    `
+                },
+                {
+                    id: 'market-benchmarking',
+                    title: 'What is Market Benchmarking?',
+                    subtitle: 'How Do Companies Know How Much to Pay You?',
+                    category: 'Compensation Basics',
+                    readTime: '10 min read',
+                    publishDate: 'February 14, 2026',
+                    excerpt: 'Ever wonder how your company decided your salary? They\'re using market benchmarking data from surveys like Radford, Mercer, and Payscale.',
+                    content: `
+# What is Market Benchmarking?
+
+You've probably wondered: *How did my company decide to offer me $130K instead of $115K or $150K?* The answer is **market benchmarking** — the process companies use to figure out what to pay you based on what everyone else is paying for similar roles.
+
+## The Basics: What Is Market Benchmarking?
+
+Market benchmarking is when a company compares compensation for a specific role against external market data to determine:
+1. **What the "market rate" is** for that job
+2. **Where they want to position themselves** (e.g., pay at the 50th percentile, 75th percentile, etc.)
+3. **What adjustments to make** for location, experience, performance, etc.
+
+Think of it like this: If you're buying a used car, you check Kelley Blue Book to see what similar cars are selling for. Companies do the same thing with salaries — except instead of KBB, they use compensation surveys from vendors like Radford, Mercer, Payscale, and others.
+
+## Where Does the Market Data Come From?
+
+Companies don't just make up salary ranges. They buy access to **compensation surveys** that aggregate data from hundreds or thousands of companies.
+
+### Major Survey Providers
+
+**Radford (by Aon)**
+- Gold standard for tech companies
+- Focuses on high-growth, technology, and life sciences companies
+- Extremely detailed (breaks down by job level, location, company size, equity types, etc.)
+- Expensive ($15K-$100K+ per year depending on company size)
+
+**Mercer**
+- Broader industry coverage (not just tech)
+- Large enterprises use this
+- Global reach
+
+**Payscale**
+- More accessible for small/medium businesses
+- Crowdsourced + survey data
+- Cheaper than Radford/Mercer
+
+**Comp Analyst (ERI)**
+- Geographic cost-of-labor data
+- Helps companies adjust pay for remote workers
+
+**Levels.fyi & Glassdoor**
+- Crowdsourced, self-reported
+- Free (for basic data)
+- Less reliable but useful for employees researching their own market value
+
+### How the Surveys Work
+
+Companies participate in these surveys by submitting their own compensation data anonymously. In exchange, they get access to the aggregated data from all other participating companies.
+
+Example:
+- Google submits: "We pay Software Engineer ICs at Level 4 a median of $180K base in San Francisco"
+- Meta submits: "We pay Software Engineer ICs at E4 a median of $175K base in SF"
+- Stripe submits: "We pay Software Engineer ICs at L2 a median of $185K base in SF"
+
+The survey vendor aggregates this and reports back:
+- **50th percentile (median)**: $180K
+- **75th percentile**: $195K
+- **90th percentile**: $210K
+
+Now any company can see: *"If we want to pay at the 75th percentile for a Software Engineer Level 4 in SF, we should target $195K base."*
+
+## How Companies Use This Data
+
+Once a company has the survey data, here's their process:
+
+### Step 1: Match Your Job to a Survey Benchmark
+
+They take your role (let's say "Product Marketing Manager") and match it to the closest job description in the survey. This is called **job matching** or **job leveling**.
+
+They ask:
+- What's the scope of responsibility?
+- How much experience is required?
+- What's the impact on the business?
+
+Then they map you to a survey job code (e.g., "Marketing Manager 3" in Radford).
+
+### Step 2: Decide on Their Market Positioning
+
+Companies have a **compensation philosophy** — a policy on where they want to pay relative to the market.
+
+Examples:
+- **"We pay at the 50th percentile"** (median market rate)
+- **"We pay at the 75th percentile for top performers"**
+- **"We pay at the 60th percentile but offer better benefits/equity"**
+
+This is a strategic choice. Paying at the 75th percentile costs more but helps attract top talent. Paying at the 50th saves money but risks losing people to higher-paying competitors.
+
+### Step 3: Apply Adjustments
+
+They take the base market number and apply multipliers for:
+
+**Location:**
+- SF/NYC = 1.3x multiplier
+- Austin/Seattle = 1.1x
+- Remote (tier 2 cities) = 0.9x
+
+**Experience:**
+- Entry-level (Level 3) = 1.0x
+- Mid-level (Level 4) = 1.2x
+- Senior (Level 5) = 1.5x
+
+**Performance:**
+- Meets expectations = 1.0x
+- Exceeds expectations = 1.1x
+- Top performer = 1.2-1.3x
+
+### Example Calculation
+
+Let's say the market data shows:
+- **Median base salary** for Product Marketing Manager (Level 4) in SF: **$140K**
+
+Your company pays at the **65th percentile** (slightly above median to be competitive). The 65th percentile is **$150K**.
+
+But you're in **Austin** (0.95x location multiplier):
+- $150K × 0.95 = **$142,500**
+
+And you have **3 years of experience** (vs. the 5 years the survey assumes for Level 4), so they apply a **0.95x experience adjustment**:
+- $142,500 × 0.95 = **$135,375**
+
+They round to **$135K** and that becomes your offer.
+
+## Why This Matters for You
+
+### 1. You Can Benchmark Yourself
+
+You don't need Radford access — you can use free tools (Levels.fyi, Glassdoor, Payscale, LinkedIn Salary) to estimate your market value. Then you can ask:
+
+> *"Based on market data I've seen, this role typically pays $145K-$160K for someone with my experience in this location. Can you share how your offer of $135K compares to your internal benchmarks?"*
+
+### 2. You Can Negotiate Based on Positioning
+
+If you know they pay at the 50th percentile, you can say:
+
+> *"I understand your philosophy is to pay at market median. Given my track record of exceeding goals, I'd like to discuss an offer at the 65th-75th percentile to reflect my performance."*
+
+### 3. You Can Challenge Their Adjustments
+
+If they lowball you with a location adjustment:
+
+> *"I see the offer reflects a remote location discount. However, I'm delivering the same value as someone in your SF office. I'd like to discuss reducing or removing that adjustment."*
+
+## The Limitations of Market Benchmarking
+
+It's not a perfect science:
+
+- **Survey data lags reality** (data is 6-12 months old by the time it's published)
+- **Job matching is subjective** (is your "Product Marketing Manager" really the same as Radford's definition?)
+- **Companies can cherry-pick data** (pick the survey that shows lower numbers to justify a lower offer)
+- **Equity is hard to benchmark** (especially for startups — how do you value unvested equity in a Series B company?)
+
+## The Bottom Line
+
+Companies aren't pulling salary numbers out of thin air. They're using market benchmarking:
+1. Buy survey data (Radford, Mercer, Payscale, etc.)
+2. Match your job to a survey benchmark
+3. Decide where they want to pay (50th percentile? 75th?)
+4. Apply adjustments for location, level, experience, performance
+
+**You should do the same.**
+
+Use free tools (Levels.fyi, Glassdoor, Payscale) to research your market value. Then negotiate with data:
+- *"I'm seeing the market median for this role is $X. Your offer is at the 40th percentile. Can we discuss moving closer to market?"*
+
+The more you understand how companies set pay, the better you can negotiate.
+                    `
+                }
+            ];
+
+            useEffect(() => {
+                chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            }, [messages]);
+
+            // When analyzer results arrive for the first time, inject a personalized greeting
+            useEffect(() => {
+                if (analysisResult && !analysisInjectedRef.current) {
+                    analysisInjectedRef.current = true;
+                    const bonusAmt = analysisResult.salary * (analysisResult.userBonusTarget !== null ? analysisResult.userBonusTarget : analysisResult.bonusTypical) / 100;
+                    const equityAmt = analysisResult.userAnnualEquity !== null ? analysisResult.userAnnualEquity : analysisResult.equityTypical;
+                    const totalComp = analysisResult.salary + bonusAmt + equityAmt;
+                    const levelLabel = ['','Entry Level','Junior','Mid-Level','Senior','Staff/Lead','Principal'][parseInt(analysisResult.level)] || '';
+                    const gap = analysisResult.market.median - analysisResult.salary;
+                    const gapMsg = gap > 0
+                        ? `Your base is $${Math.round(gap).toLocaleString()} below the market median — that's a real conversation worth having.`
+                        : `You're sitting at the ${analysisResult.percentile.toFixed(0)}th percentile, which is solid.`;
+
+                    setMessages([
+                        { role: 'assistant', content: `I've got your profile loaded. Here's what I see:\n\nYou're a ${levelLabel} ${jobTitle} (${analysisResult.track}) in ${location || 'your area'}, earning $${analysisResult.salary.toLocaleString()} base with an estimated total package of $${totalComp.toLocaleString()}.\n\n${gapMsg}\n\nWhat would you like to dig into? I can help you build a negotiation case, decode your equity, evaluate an offer, or just explain how this all works.` }
+                    ]);
+                }
+            }, [analysisResult]);
+
+            const analyzeSalary = () => {
+                if (subscriptionTier === 'free' && analysisResult !== null) {
+                    setShowPaywall(true);
+                    return;
+                }
+
+                const baseMarket = marketData[jobTitle];
+                if (!baseMarket) {
+                    alert('Please select a valid job title');
+                    return;
+                }
+
+                if (!level || !managementTrack) {
+                    alert('Please select both Level and Management Track');
+                    return;
+                }
+
+                const locationMult = locationAdjustments[location] || 1.0;
+                const levelMult = levelMultipliers[parseInt(level)];
+                const trackMult = trackMultipliers[managementTrack];
+                const totalMult = locationMult * levelMult * trackMult;
+                
+                const adjustedMedian = baseMarket.median * totalMult;
+                const adjustedP25 = baseMarket.p25 * totalMult;
+                const adjustedP75 = baseMarket.p75 * totalMult;
+                const adjustedP90 = baseMarket.p90 * totalMult;
+
+                const salary = parseFloat(currentSalary);
+                const percentile = calculatePercentile(salary, adjustedP25, adjustedMedian, adjustedP75, adjustedP90);
+                const compaRatio = (salary / adjustedMedian * 100).toFixed(1);
+
+                let assessment = '';
+                let action = '';
+                
+                if (percentile < 25) {
+                    assessment = 'Below Market';
+                    action = 'Your compensation is below market rate for your level and track. Consider requesting a market adjustment.';
+                } else if (percentile < 40) {
+                    assessment = 'Slightly Below Market';
+                    action = 'You have room for negotiation. Document your value and request a review.';
+                } else if (percentile < 60) {
+                    assessment = 'Market Rate';
+                    action = 'Your compensation is competitive for your level. Focus on performance and progression.';
+                } else if (percentile < 80) {
+                    assessment = 'Above Market';
+                    action = 'You\'re well-compensated for your level. Consider negotiating equity or advancement.';
+                } else {
+                    assessment = 'Top of Market';
+                    action = 'Excellent compensation for your level. Future increases may be limited—focus on equity or promotion.';
+                }
+
+                // Compute total comp market ranges using typical bonus % and equity for each percentile
+                const bonusPct = (bonusTarget ? parseFloat(bonusTarget) : baseMarket.bonus_typical) / 100;
+                const equityVal = annualEquity ? parseFloat(annualEquity) : baseMarket.equity_typical * totalMult;
+
+                const tcP25   = adjustedP25   + (adjustedP25   * bonusPct) + equityVal;
+                const tcMedian= adjustedMedian+ (adjustedMedian* bonusPct) + equityVal;
+                const tcP75   = adjustedP75   + (adjustedP75   * bonusPct) + equityVal;
+                const tcP90   = adjustedP90   + (adjustedP90   * bonusPct) + equityVal;
+
+                const userTC  = salary + (salary * bonusPct) + equityVal;
+                const tcPercentile = calculatePercentile(userTC, tcP25, tcMedian, tcP75, tcP90);
+                const tcCompaRatio = (userTC / tcMedian * 100).toFixed(1);
+
+                setAnalysisResult({
+                    salary, 
+                    market: { p25: adjustedP25, median: adjustedMedian, p75: adjustedP75, p90: adjustedP90 },
+                    tcMarket: { p25: tcP25, median: tcMedian, p75: tcP75, p90: tcP90 },
+                    percentile, 
+                    compaRatio, 
+                    tcPercentile,
+                    tcCompaRatio,
+                    userTC,
+                    assessment, 
+                    action,
+                    equityTypical: baseMarket.equity_typical * totalMult,
+                    bonusTypical: baseMarket.bonus_typical,
+                    userBonusTarget: bonusTarget ? parseFloat(bonusTarget) : null,
+                    userAnnualEquity: annualEquity ? parseFloat(annualEquity) : null,
+                    level,
+                    track: managementTrack,
+                    company: company || null,
+                });
+            };
+
+            const calculatePercentile = (value, p25, median, p75, p90) => {
+                if (value <= p25) return (value / p25) * 25;
+                if (value <= median) return 25 + ((value - p25) / (median - p25)) * 25;
+                if (value <= p75) return 50 + ((value - median) / (p75 - median)) * 25;
+                if (value <= p90) return 75 + ((value - p75) / (p90 - p75)) * 15;
+                return 90 + Math.min(10, ((value - p90) / p90) * 10);
+            };
+
+            const buildSystemPrompt = () => {
+                const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+
+                // Core expert persona
+                let prompt = `You are CompCoach.ai, an expert compensation advisor with 20+ years of experience in total rewards, HR consulting, and career coaching. You've helped thousands of employees understand their pay, negotiate offers, and build careers at top companies.
+
+Your personality: Warm, direct, and empowering. You cut through corporate jargon. You give specific, actionable advice — not vague platitudes. You speak like a trusted friend who happens to be a compensation expert. You never make the user feel bad about where they are; you help them see where they can go.
+
+Your expertise covers:
+- Base salary benchmarking and market pricing
+- Bonus structures (target vs. actual, MBO vs. formulaic)
+- Equity compensation: RSUs, stock options (ISOs/NSOs), ESPP, vesting schedules, cliff periods, clawbacks
+- Total compensation analysis and comparison
+- Salary negotiation tactics, timing, and scripts
+- Job leveling frameworks (IC vs. management tracks, career ladders)
+- Pay equity — gender, race, and geography gaps
+- Compensation philosophy (pay positioning, compa-ratio, pay bands)
+- Benefits valuation (401k match, health insurance, PTO, parental leave)
+- Offer evaluation and counter-offer strategy
+- Market trends and industry benchmarks as of ${today}
+
+Guidelines:
+- Always be specific. Use dollar amounts and percentages, not vague ranges.
+- When giving negotiation advice, provide actual scripts the user can say or write.
+- When explaining concepts, use plain English with a brief real-world example.
+- Keep responses focused and under 200 words unless the user asks for a deep dive.
+- End every response with one clear, actionable next step.
+- Never make the user feel judged for their salary or situation.
+- If you don't have enough information to give specific advice, ask one targeted clarifying question.`;
+
+                // If the user has run an analysis, inject their data
+                if (analysisResult) {
+                    const bonusAmt = analysisResult.salary * (analysisResult.userBonusTarget !== null ? analysisResult.userBonusTarget : analysisResult.bonusTypical) / 100;
+                    const equityAmt = analysisResult.userAnnualEquity !== null ? analysisResult.userAnnualEquity : analysisResult.equityTypical;
+                    const totalComp = analysisResult.salary + bonusAmt + equityAmt;
+
+                    prompt += `
+
+---
+IMPORTANT: This user has already run a compensation analysis. Use this data to personalize every response. Reference their specific numbers when relevant.
+
+USER'S COMPENSATION PROFILE:
+- Job Family: ${jobTitle}
+- Company: ${analysisResult.company || 'Not provided'}
+- Location: ${location || 'Not specified'}
+- Level: ${analysisResult.level} (${
+    analysisResult.level == 1 ? 'Entry Level' :
+    analysisResult.level == 2 ? 'Junior' :
+    analysisResult.level == 3 ? 'Mid-Level' :
+    analysisResult.level == 4 ? 'Senior' :
+    analysisResult.level == 5 ? 'Staff/Lead' : 'Principal'
+})
+- Track: ${analysisResult.track}
+- Current Base Salary: $${analysisResult.salary.toLocaleString()}
+- Bonus Target: ${analysisResult.userBonusTarget !== null ? analysisResult.userBonusTarget + '% (user-provided)' : analysisResult.bonusTypical + '% (market typical)'}
+- Annual Equity: $${equityAmt.toLocaleString()}${analysisResult.userAnnualEquity !== null ? ' (user-provided)' : ' (market typical)'}
+- Estimated Total Compensation: $${totalComp.toLocaleString()}
+
+MARKET ANALYSIS RESULTS:
+- Market Percentile: ${analysisResult.percentile.toFixed(0)}th percentile
+- Compa-Ratio: ${analysisResult.compaRatio}% (vs. market median of $${Math.round(analysisResult.market.median).toLocaleString()})
+- Assessment: ${analysisResult.assessment}
+- Market Range for this role/level/location:
+  - 25th percentile: $${Math.round(analysisResult.market.p25).toLocaleString()}
+  - Median (50th): $${Math.round(analysisResult.market.median).toLocaleString()}
+  - 75th percentile: $${Math.round(analysisResult.market.p75).toLocaleString()}
+  - 90th percentile: $${Math.round(analysisResult.market.p90).toLocaleString()}
+
+When the user asks about their pay, negotiation, or next steps — use these numbers directly. Don't ask them to repeat information they've already provided.`;
+                }
+
+                return prompt;
+            };
+
+            const handleFileUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setUploadError('');
+
+                const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'text/plain'];
+                const maxSize = 5 * 1024 * 1024; // 5MB
+
+                if (!allowedTypes.includes(file.type)) {
+                    setUploadError('Please upload a PDF, image (PNG/JPG/WebP), or text file.');
+                    return;
+                }
+                if (file.size > maxSize) {
+                    setUploadError('File must be under 5MB.');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    setUploadedFile({ name: file.name, type: file.type, base64, size: file.size });
+                };
+                reader.readAsDataURL(file);
+            };
+
+            const sendMessage = async () => {
+                if (!inputMessage.trim() && !uploadedFile) return;
+                if (subscriptionTier === 'free' && messages.length >= 6) {
+                    setShowPaywall(true);
+                    return;
+                }
+
+                // Build user message content
+                let userContent;
+                const userText = inputMessage.trim() || (uploadedFile ? `I've uploaded ${uploadedFile.name}. Please review it and give me your analysis.` : '');
+
+                if (uploadedFile) {
+                    if (uploadedFile.type === 'application/pdf') {
+                        userContent = [
+                            { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: uploadedFile.base64 } },
+                            { type: 'text', text: userText }
+                        ];
+                    } else if (uploadedFile.type.startsWith('image/')) {
+                        userContent = [
+                            { type: 'image', source: { type: 'base64', media_type: uploadedFile.type, data: uploadedFile.base64 } },
+                            { type: 'text', text: userText }
+                        ];
+                    } else {
+                        // Plain text file — decode and inline
+                        const decoded = atob(uploadedFile.base64);
+                        userContent = [{ type: 'text', text: `File: ${uploadedFile.name}\n\n${decoded}\n\n${userText}` }];
+                    }
+                } else {
+                    userContent = userText;
+                }
+
+                const userMessage = { role: 'user', content: uploadedFile ? `📎 ${uploadedFile.name}${inputMessage ? ' — ' + inputMessage : ''}` : inputMessage };
+                setMessages(prev => [...prev, userMessage]);
+                setInputMessage('');
+                setUploadedFile(null);
+                setIsTyping(true);
+
+                try {
+                    const historyMessages = messages
+                        .filter(m => m.role !== 'system')
+                        .map(m => ({ role: m.role, content: m.content }));
+
+                    const response = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'claude-sonnet-4-20250514',
+                            max_tokens: 1000,
+                            system: buildSystemPrompt(),
+                            messages: [...historyMessages, { role: 'user', content: userContent }],
+                        }),
+                    });
+                    const data = await response.json();
+                    setMessages(prev => [...prev, { role: 'assistant', content: data.content[0].text }]);
+                } catch (error) {
+                    setMessages(prev => [...prev, { role: 'assistant', content: 'Oops! Something went wrong. Please try again.' }]);
+                }
+                setIsTyping(false);
+            };
+
+            return (
+                <div className="min-h-screen">
+                    {/* Header + Nav Ribbon */}
+                    <header className="bg-white shadow-sm sticky top-0 z-50">
+                        {/* Top bar: Logo + User actions */}
+                        <div className="max-w-7xl mx-auto px-6 py-3 flex justify-between items-center border-b border-gray-100">
+                            {/* Logo */}
+                            <button onClick={() => setActiveTab('home')} className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                    </svg>
+                                </div>
+                                <div className="text-left">
+                                    <h1 className="text-lg font-bold gradient-text leading-none">CompCoach.ai</h1>
+                                    <p className="text-[10px] text-gray-400 font-medium">Your Compensation Advisor</p>
+                                </div>
+                            </button>
+
+                            {/* Right side: search, notifications, account */}
+                            <div className="flex items-center gap-2">
+                                {/* Search */}
+                                <div className="hidden md:flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 w-56">
+                                    <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                    </svg>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search..." 
+                                        className="bg-transparent text-sm text-gray-600 outline-none w-full placeholder-gray-400"
+                                    />
+                                </div>
+
+                                {/* Notifications */}
+                                <div className="relative">
+                                    <button className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center hover:bg-gray-100 transition-colors">
+                                        <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                        </svg>
+                                    </button>
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">3</span>
+                                </div>
+
+                                {/* Bookmarks / Saved */}
+                                <button className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 hidden md:flex items-center justify-center hover:bg-gray-100 transition-colors">
+                                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/>
+                                    </svg>
+                                </button>
+
+                                {/* Divider */}
+                                <div className="w-px h-6 bg-gray-200 hidden md:block"></div>
+
+                                {/* Plan badge */}
+                                <span className="badge bg-blue-50 text-blue-700 border border-blue-200 hidden sm:inline-block">
+                                    {subscriptionTier === 'free' ? 'Free' : subscriptionTier === 'individual' ? 'Pro' : 'Premium'}
+                                </span>
+
+                                {/* Upgrade */}
+                                {subscriptionTier === 'free' && (
+                                    <button 
+                                        onClick={() => setShowPaywall(true)}
+                                        className="btn-primary text-sm py-2 px-4 hidden sm:block"
+                                    >
+                                        Upgrade
+                                    </button>
+                                )}
+
+                                {/* Avatar / Account */}
+                                <button className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                                    U
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Nav Ribbon: Tool Links */}
+                        <div className="max-w-7xl mx-auto px-6">
+                            <div className="flex overflow-x-auto gap-1">
+                                {[
+                                    { 
+                                        id: 'home', 
+                                        label: 'Home',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                    },
+                                    { 
+                                        id: 'analyze', 
+                                        label: 'Compensation Analyzer',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    },
+                                    { 
+                                        id: 'chat', 
+                                        label: 'AI Coach',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    },
+                                    { 
+                                        id: 'market', 
+                                        label: 'Market Data',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                    },
+                                    { 
+                                        id: 'learn', 
+                                        label: 'Learn',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                    },
+                                ].map(tab => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all border-b-2 ${
+                                            activeTab === tab.id
+                                                ? 'border-blue-500 text-blue-600'
+                                                : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        {tab.icon}
+                                        <span>{tab.label}</span>
+                                    </button>
+                                ))}
+
+                                {/* Right-aligned settings */}
+                                <div className="ml-auto flex items-center">
+                                    <button 
+                                        onClick={() => setShowPaywall(true)}
+                                        className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all border-b-2 border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300`}
+                                    >
+                                        <span>⚙️</span>
+                                        <span className="hidden md:inline">Settings</span>
+                                    </button>
+                                    <button 
+                                        className={`flex items-center gap-1.5 px-4 py-3 text-sm font-semibold whitespace-nowrap transition-all border-b-2 border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300`}
+                                    >
+                                        <span>❓</span>
+                                        <span className="hidden md:inline">Help</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="max-w-7xl mx-auto px-6 py-8">
+                        {/* HOME PAGE */}
+                        {activeTab === 'home' && (
+                            <div className="space-y-12 fade-in">
+                                {/* Hero Section */}
+                                <div className="text-center py-12">
+                                    <div className="flex justify-center mb-8">
+                                        <CoachCharacter size={180} animated={true} />
+                                    </div>
+                                    <h1 className="text-5xl md:text-6xl font-bold mb-4 text-gray-900">
+                                        Know Your <span className="gradient-text">Worth</span>
+                                    </h1>
+                                    <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                                        Your personal AI coach for fair compensation and confident negotiation
+                                    </p>
+                                    <div className="flex gap-4 justify-center flex-wrap">
+                                        <button 
+                                            onClick={() => setActiveTab('analyze')}
+                                            className="btn-primary"
+                                        >
+                                            Analyze My Salary →
+                                        </button>
+                                        <button 
+                                            onClick={() => setActiveTab('chat')}
+                                            className="btn-secondary"
+                                        >
+                                            Talk to Coach
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Tools Grid */}
+                                <div>
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                                        Your Compensation <span className="gradient-text">Toolkit</span>
+                                    </h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        {[
+                                            {
+                                                id: 'analyze',
+                                                title: 'Compensation Analyzer',
+                                                desc: 'See exactly where you stand in the market',
+                                                cta: 'Run Analysis',
+                                                color1: '#1d4ed8', color2: '#0369a1',
+                                                svg: (
+                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                                                        <rect x="40" y="50" width="28" height="50" rx="3" fill="white" opacity="0.15"/>
+                                                        <rect x="82" y="35" width="28" height="65" rx="3" fill="white" opacity="0.25"/>
+                                                        <rect x="124" y="18" width="28" height="82" rx="3" fill="white" opacity="0.38"/>
+                                                        <rect x="166" y="8" width="28" height="92" rx="3" fill="white" opacity="0.55"/>
+                                                        <rect x="208" y="2" width="28" height="98" rx="3" fill="white" opacity="0.75"/>
+                                                        <polyline points="54,48 96,33 138,16 180,6 222,0" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        <circle cx="222" cy="0" r="6" fill="white"/>
+                                                        <circle cx="222" cy="0" r="11" stroke="white" strokeWidth="1.5" opacity="0.35"/>
+                                                        <line x1="138" y1="0" x2="138" y2="100" stroke="white" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.35"/>
+                                                        <rect x="110" y="2" width="56" height="16" rx="4" fill="white" opacity="0.85"/>
+                                                        <text x="138" y="13" textAnchor="middle" fontSize="9" fontWeight="700" fill="#1d4ed8">YOU</text>
+                                                    </svg>
+                                                )
+                                            },
+                                            {
+                                                id: 'chat',
+                                                title: 'AI Coach',
+                                                desc: 'Your personal compensation expert, 24/7',
+                                                cta: 'Ask a Question',
+                                                color1: '#5b21b6', color2: '#7c3aed',
+                                                svg: (
+                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                                                        <circle cx="70" cy="50" r="38" fill="white" opacity="0.08"/>
+                                                        <circle cx="70" cy="38" r="22" fill="white" opacity="0.18"/>
+                                                        <circle cx="63" cy="36" r="3.5" fill="white" opacity="0.85"/>
+                                                        <circle cx="77" cy="36" r="3.5" fill="white" opacity="0.85"/>
+                                                        <path d="M62 45 Q70 51 78 45" stroke="white" strokeWidth="2.5" strokeLinecap="round" fill="none"/>
+                                                        <ellipse cx="70" cy="75" rx="18" ry="10" fill="white" opacity="0.12"/>
+                                                        <rect x="120" y="8" width="180" height="36" rx="10" fill="white" opacity="0.18"/>
+                                                        <line x1="134" y1="20" x2="286" y2="20" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.6"/>
+                                                        <line x1="134" y1="30" x2="268" y2="30" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
+                                                        <rect x="120" y="52" width="145" height="30" rx="10" fill="white" opacity="0.12"/>
+                                                        <line x1="134" y1="63" x2="252" y2="63" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
+                                                        <line x1="134" y1="73" x2="232" y2="73" stroke="white" strokeWidth="2" strokeLinecap="round" opacity="0.4"/>
+                                                        <rect x="120" y="88" width="65" height="18" rx="9" fill="white" opacity="0.1"/>
+                                                        <circle cx="133" cy="97" r="3" fill="white" opacity="0.7"/>
+                                                        <circle cx="143" cy="97" r="3" fill="white" opacity="0.5"/>
+                                                        <circle cx="153" cy="97" r="3" fill="white" opacity="0.3"/>
+                                                    </svg>
+                                                )
+                                            },
+                                            {
+                                                id: 'market',
+                                                title: 'Market Data',
+                                                desc: 'Benchmarks by role, level, and location',
+                                                cta: 'Explore Data',
+                                                color1: '#065f46', color2: '#0d9488',
+                                                svg: (
+                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                                                        <ellipse cx="160" cy="50" rx="140" ry="48" stroke="white" strokeWidth="1" opacity="0.18"/>
+                                                        <ellipse cx="160" cy="50" rx="140" ry="22" stroke="white" strokeWidth="1" opacity="0.12"/>
+                                                        <ellipse cx="160" cy="50" rx="58" ry="48" stroke="white" strokeWidth="1" opacity="0.12"/>
+                                                        <line x1="20" y1="50" x2="300" y2="50" stroke="white" strokeWidth="1" opacity="0.12"/>
+                                                        <g>
+                                                            <circle cx="60" cy="30" r="22" fill="white" opacity="0.92"/>
+                                                            <text x="60" y="26" textAnchor="middle" fontSize="7" fontWeight="700" fill="#065f46">SF</text>
+                                                            <text x="60" y="37" textAnchor="middle" fontSize="9" fontWeight="800" fill="#065f46">$192K</text>
+                                                            <line x1="60" y1="52" x2="60" y2="62" stroke="white" strokeWidth="2" opacity="0.6"/>
+                                                            <circle cx="60" cy="64" r="2.5" fill="white" opacity="0.6"/>
+                                                        </g>
+                                                        <g>
+                                                            <circle cx="230" cy="26" r="20" fill="white" opacity="0.82"/>
+                                                            <text x="230" y="23" textAnchor="middle" fontSize="7" fontWeight="700" fill="#065f46">NYC</text>
+                                                            <text x="230" y="34" textAnchor="middle" fontSize="9" fontWeight="800" fill="#065f46">$178K</text>
+                                                            <line x1="230" y1="46" x2="230" y2="54" stroke="white" strokeWidth="1.5" opacity="0.5"/>
+                                                            <circle cx="230" cy="56" r="2" fill="white" opacity="0.5"/>
+                                                        </g>
+                                                        <g>
+                                                            <circle cx="170" cy="68" r="18" fill="white" opacity="0.72"/>
+                                                            <text x="170" y="65" textAnchor="middle" fontSize="6" fontWeight="700" fill="#065f46">AUS</text>
+                                                            <text x="170" y="75" textAnchor="middle" fontSize="8" fontWeight="800" fill="#065f46">$131K</text>
+                                                            <line x1="170" y1="86" x2="170" y2="92" stroke="white" strokeWidth="1.5" opacity="0.4"/>
+                                                        </g>
+                                                        <g>
+                                                            <circle cx="108" cy="76" r="15" fill="white" opacity="0.62"/>
+                                                            <text x="108" y="73" textAnchor="middle" fontSize="6" fontWeight="700" fill="#065f46">DEN</text>
+                                                            <text x="108" y="82" textAnchor="middle" fontSize="7" fontWeight="800" fill="#065f46">$119K</text>
+                                                        </g>
+                                                    </svg>
+                                                )
+                                            },
+                                            {
+                                                id: 'learn',
+                                                title: 'Learn',
+                                                desc: 'RSUs, equity, bonus structures, and comp fundamentals',
+                                                cta: 'Start Learning',
+                                                color1: '#1e3a5f', color2: '#1d4ed8',
+                                                svg: (
+                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                                                        <path d="M20 14 C20 14 85 8 160 14 L160 95 C85 89 20 95 20 95 Z" fill="white" opacity="0.1"/>
+                                                        <path d="M160 14 C160 14 235 8 300 14 L300 95 C235 89 160 95 160 95 Z" fill="white" opacity="0.16"/>
+                                                        <line x1="160" y1="14" x2="160" y2="95" stroke="white" strokeWidth="2.5" opacity="0.4"/>
+                                                        <text x="90" y="35" textAnchor="middle" fontSize="10" fontWeight="800" fill="white" opacity="0.7">RSUs</text>
+                                                        <line x1="30" y1="44" x2="148" y2="43" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.45"/>
+                                                        <line x1="30" y1="53" x2="148" y2="52" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.45"/>
+                                                        <line x1="30" y1="62" x2="130" y2="61" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/>
+                                                        <text x="90" y="80" textAnchor="middle" fontSize="10" fontWeight="800" fill="white" opacity="0.7">Equity</text>
+                                                        <line x1="30" y1="88" x2="148" y2="88" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.35"/>
+                                                        <text x="230" y="35" textAnchor="middle" fontSize="10" fontWeight="800" fill="white" opacity="0.9">Bonus</text>
+                                                        <line x1="172" y1="44" x2="288" y2="43" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                                                        <line x1="172" y1="53" x2="288" y2="52" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.6"/>
+                                                        <line x1="172" y1="62" x2="270" y2="61" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.55"/>
+                                                        <text x="230" y="80" textAnchor="middle" fontSize="10" fontWeight="800" fill="white" opacity="0.9">Total Comp</text>
+                                                        <line x1="172" y1="88" x2="288" y2="88" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.5"/>
+                                                        <circle cx="282" cy="95" r="16" fill="white" opacity="0.9"/>
+                                                        <path d="M276 92 Q282 87 288 92 Q288 96 286 97 L278 97 Q276 96 276 92Z" fill="#1e3a5f"/>
+                                                        <rect x="278" y="98" width="8" height="4" rx="1" fill="#1e3a5f"/>
+                                                        <line x1="274" y1="90" x2="272" y2="87" stroke="#1e3a5f" strokeWidth="1.2"/>
+                                                        <line x1="290" y1="90" x2="292" y2="87" stroke="#1e3a5f" strokeWidth="1.2"/>
+                                                    </svg>
+                                                )
+                                            }
+                                        ].map((tool, idx) => (
+                                            <div
+                                                key={tool.id}
+                                                onClick={() => setActiveTab(tool.id)}
+                                                className="cursor-pointer group overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white flex flex-col"
+                                            >
+                                                {/* Illustration section - 100px tall gradient background */}
+                                                <div className="relative overflow-hidden" style={{background: `linear-gradient(140deg, ${tool.color1} 0%, ${tool.color2} 100%)`, height: '100px'}}>
+                                                    {tool.svg}
+                                                </div>
+                                                {/* Text section - white background, clean and readable */}
+                                                <div className="p-5 flex-1">
+                                                    <h3 className="text-lg font-bold text-gray-900 mb-1.5">{tool.title}</h3>
+                                                    <p className="text-sm text-gray-600 leading-relaxed mb-4">{tool.desc}</p>
+                                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 group-hover:text-blue-700 transition-colors">
+                                                        {tool.cta}
+                                                        <svg className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* News Feed */}
+                                <div>
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h2 className="text-3xl font-bold text-gray-900">
+                                            Latest <span className="gradient-text">Insights</span>
+                                        </h2>
+                                        <button className="text-blue-600 hover:text-blue-700 text-sm font-semibold transition-colors">
+                                            View All →
+                                        </button>
+                                    </div>
+                                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory">
+                                        {news.map((article, idx) => (
+                                            <a
+                                                key={idx}
+                                                href={article.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group card p-5 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 flex flex-col flex-shrink-0 w-80 snap-start"
+                                            >
+                                                {/* Category badge and timestamp */}
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full bg-gradient-to-r ${article.gradient} text-white`}>
+                                                        {article.category}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400 font-medium">{article.time}</span>
+                                                </div>
+
+                                                {/* Title */}
+                                                <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                                    {article.title}
+                                                </h3>
+
+                                                {/* Excerpt */}
+                                                <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-grow">
+                                                    {article.excerpt}
+                                                </p>
+
+                                                {/* Source and read more */}
+                                                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                    <span className="text-xs text-gray-500 font-semibold">{article.source}</span>
+                                                    <span className="text-xs text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                                                        Read
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+                                                        </svg>
+                                                    </span>
+                                                </div>
+                                            </a>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Stats Section */}
+                                <div className="card p-8">
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+                                        Powered by <span className="gradient-text">Real Data</span>
+                                    </h2>
+                                    <div className="grid md:grid-cols-3 gap-8 text-center">
+                                        <div>
+                                            <p className="text-5xl font-bold gradient-text mb-2">10M+</p>
+                                            <p className="text-gray-600 font-medium">Salary Data Points</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-5xl font-bold gradient-text mb-2">500K+</p>
+                                            <p className="text-gray-600 font-medium">Users Empowered</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-5xl font-bold gradient-text mb-2">$2.8B</p>
+                                            <p className="text-gray-600 font-medium">Total Negotiated</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ANALYZE TAB */}
+                        {activeTab === 'analyze' && (
+                            <div className="space-y-6 fade-in">
+                                <div className="card p-8">
+                                    <div className="flex items-start gap-6 mb-6">
+                                        <CoachCharacter size={80} />
+                                        <div>
+                                            <h2 className="text-3xl font-bold text-gray-900 mb-2">Compensation Analyzer</h2>
+                                            <p className="text-gray-600">Let's see how your compensation stacks up</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="space-y-5">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Job Title</label>
+                                            <select
+                                                value={jobTitle}
+                                                onChange={(e) => setJobTitle(e.target.value)}
+                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                            >
+                                                <option value="">Select your role...</option>
+                                                {Object.entries(jobFunctions).map(([fn, titles]) => (
+                                                    <optgroup key={fn} label={fn}>
+                                                        {titles.map(title => (
+                                                            <option key={title} value={title}>{title}</option>
+                                                        ))}
+                                                    </optgroup>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                                Company <span className="text-gray-400 text-xs font-normal">(Optional)</span>
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={company}
+                                                onChange={(e) => setCompany(e.target.value)}
+                                                placeholder="e.g. Google, Stripe, Memorial Health..."
+                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Base Salary</label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">$</span>
+                                                <input
+                                                    type="number"
+                                                    value={currentSalary}
+                                                    onChange={(e) => setCurrentSalary(e.target.value)}
+                                                    placeholder="120000"
+                                                    className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                                            <select
+                                                value={location}
+                                                onChange={(e) => setLocation(e.target.value)}
+                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                            >
+                                                <option value="">Select location...</option>
+                                                {Object.keys(locationAdjustments).map(loc => (
+                                                    <option key={loc} value={loc}>{loc}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Level</label>
+                                                <select
+                                                    value={level}
+                                                    onChange={(e) => setLevel(e.target.value)}
+                                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="1">1 - Entry Level</option>
+                                                    <option value="2">2 - Junior</option>
+                                                    <option value="3">3 - Mid-Level</option>
+                                                    <option value="4">4 - Senior</option>
+                                                    <option value="5">5 - Staff/Lead</option>
+                                                    <option value="6">6 - Principal</option>
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Track</label>
+                                                <select
+                                                    value={managementTrack}
+                                                    onChange={(e) => setManagementTrack(e.target.value)}
+                                                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                                >
+                                                    <option value="">Select...</option>
+                                                    <option value="Individual Contributor">Individual Contributor</option>
+                                                    <option value="Manager">Manager</option>
+                                                    <option value="Executive">Executive</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-semibold text-gray-700 mb-2">Years of Experience <span className="text-gray-400 text-xs font-normal">(Optional)</span></label>
+                                            <input
+                                                type="number"
+                                                value={yearsExp}
+                                                onChange={(e) => setYearsExp(e.target.value)}
+                                                placeholder="5"
+                                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                            />
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <div className="flex items-center mb-2 tooltip-wrapper">
+                                                    <label className="text-sm font-semibold text-gray-700">Bonus Target</label>
+                                                    <span className="tooltip-icon">?</span>
+                                                    <div className="tooltip-box">Bonus target is represented as a percentage of base salary.</div>
+                                                </div>
+                                                <div className="relative">
+                                                    <input
+                                                        type="number"
+                                                        value={bonusTarget}
+                                                        onChange={(e) => setBonusTarget(e.target.value)}
+                                                        placeholder="15"
+                                                        min="0"
+                                                        max="200"
+                                                        className="w-full pl-4 pr-10 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                                    />
+                                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold text-sm">%</span>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center mb-2 tooltip-wrapper">
+                                                    <label className="text-sm font-semibold text-gray-700">Annual Equity Award</label>
+                                                    <span className="tooltip-icon">?</span>
+                                                    <div className="tooltip-box">Companies use different vesting schedules, but annualized run rate is a good proxy for analyzing total compensation.</div>
+                                                </div>
+                                                <div className="relative">
+                                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                                                    <input
+                                                        type="number"
+                                                        value={annualEquity}
+                                                        onChange={(e) => setAnnualEquity(e.target.value)}
+                                                        placeholder="25000"
+                                                        min="0"
+                                                        className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={analyzeSalary}
+                                            className="w-full btn-primary py-4 text-lg"
+                                        >
+                                            Analyze Now →
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Results */}
+                                {analysisResult && (
+                                    <div className="space-y-6 fade-in">
+                                        <div className={`card p-8 border-l-4 ${
+                                            analysisResult.assessment.includes('Below') ? 'border-red-500' :
+                                            analysisResult.assessment.includes('Above') || analysisResult.assessment.includes('Top') ? 'border-green-500' :
+                                            'border-blue-500'
+                                        }`}>
+                                            <div className="flex justify-between items-start mb-4">
+                                                <div>
+                                                    <h3 className="text-2xl font-bold text-gray-900">Your Position</h3>
+                                                    <p className="text-sm text-gray-600 mt-1">
+                                                        Level {analysisResult.level} · {analysisResult.track}
+                                                    </p>
+                                                </div>
+                                                <span className={`badge ${
+                                                    analysisResult.assessment.includes('Below') ? 'bg-red-50 text-red-700 border border-red-200' :
+                                                    analysisResult.assessment.includes('Above') || analysisResult.assessment.includes('Top') ? 'bg-green-50 text-green-700 border border-green-200' :
+                                                    'bg-blue-50 text-blue-700 border border-blue-200'
+                                                }`}>
+                                                    {analysisResult.assessment}
+                                                </span>
+                                            </div>
+                                            <p className="text-gray-700 mb-6 text-lg">{analysisResult.action}</p>
+                                            
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 p-5 rounded-xl">
+                                                    <p className="text-xs text-gray-600 mb-2 font-semibold">Market Percentile</p>
+                                                    <p className="text-5xl font-bold gradient-text">{analysisResult.percentile.toFixed(0)}<span className="text-2xl">th</span></p>
+                                                </div>
+                                                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl">
+                                                    <p className="text-xs text-gray-600 mb-2 font-semibold">Compa-Ratio</p>
+                                                    <p className="text-5xl font-bold gradient-text">{analysisResult.compaRatio}<span className="text-2xl">%</span></p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="card p-8">
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-6">Market Comparison</h3>
+                                            
+                                            <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-sm font-semibold text-gray-700">Your Salary</span>
+                                                    <span className="text-3xl font-bold gradient-text">
+                                                        ${analysisResult.salary.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+                                                <p className="text-xs text-gray-600">
+                                                    <span className="font-bold">Analysis Based On:</span> {jobTitle}{analysisResult.company ? ` at ${analysisResult.company}` : ''}, {location}, Level {analysisResult.level}, {analysisResult.track}
+                                                </p>
+                                            </div>
+                                            
+                                            <div className="space-y-3">
+                                                {[
+                                                    { label: '25th Percentile', value: analysisResult.market.p25 },
+                                                    { label: 'Median (50th)', value: analysisResult.market.median },
+                                                    { label: '75th Percentile', value: analysisResult.market.p75 },
+                                                    { label: '90th Percentile', value: analysisResult.market.p90 },
+                                                ].map((item, idx) => (
+                                                    <div key={idx} className="flex justify-between py-3 border-b border-gray-100 last:border-b-0">
+                                                        <span className="text-gray-700 font-medium">{item.label}</span>
+                                                        <span className="text-gray-900 font-bold">${item.value.toLocaleString()}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            <div className="mt-8">
+                                                <div className="progress-bar mb-2">
+                                                    <div 
+                                                        className="progress-fill" 
+                                                        style={{ width: `${Math.min(analysisResult.percentile, 100)}%` }}
+                                                    ></div>
+                                                </div>
+                                                <div className="flex justify-between text-xs text-gray-500">
+                                                    <span>Bottom 25%</span>
+                                                    <span>Median</span>
+                                                    <span>Top 10%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="card p-8">
+                                            <h3 className="text-2xl font-bold text-gray-900 mb-6">Total Compensation</h3>
+
+                                            {/* Your TC highlighted */}
+                                            <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-sm font-semibold text-gray-700">Your Total Compensation</span>
+                                                    <span className="text-3xl font-bold gradient-text">${Math.round(analysisResult.userTC).toLocaleString()}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* TC breakdown */}
+                                            <div className="space-y-3 mb-6">
+                                                <div className="flex justify-between py-2">
+                                                    <span className="text-gray-600">Base Salary</span>
+                                                    <span className="font-bold text-gray-900">${analysisResult.salary.toLocaleString()}</span>
+                                                </div>
+                                                <div className="flex justify-between py-2">
+                                                    <span className="text-gray-600">
+                                                        {analysisResult.userBonusTarget !== null
+                                                            ? `Bonus Target (${analysisResult.userBonusTarget}%)`
+                                                            : `Market Bonus (${analysisResult.bonusTypical}% typical)`}
+                                                    </span>
+                                                    <span className="font-bold text-gray-900">
+                                                        ${(analysisResult.salary * (analysisResult.userBonusTarget !== null ? analysisResult.userBonusTarget : analysisResult.bonusTypical) / 100).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between py-2 pb-3 border-b-2 border-gray-200">
+                                                    <span className="text-gray-600">
+                                                        {analysisResult.userAnnualEquity !== null ? 'Annual Equity Award' : 'Market Equity (typical)'}
+                                                    </span>
+                                                    <span className="font-bold text-gray-900">
+                                                        ${(analysisResult.userAnnualEquity !== null ? analysisResult.userAnnualEquity : analysisResult.equityTypical).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            {/* TC percentile + compa-ratio */}
+                                            <div className="grid grid-cols-2 gap-4 mb-6">
+                                                <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-5 rounded-xl">
+                                                    <p className="text-xs text-gray-600 mb-2 font-semibold">TC Percentile</p>
+                                                    <p className="text-5xl font-bold gradient-text">{analysisResult.tcPercentile.toFixed(0)}<span className="text-2xl">th</span></p>
+                                                </div>
+                                                <div className="bg-gradient-to-br from-orange-50 to-red-50 p-5 rounded-xl">
+                                                    <p className="text-xs text-gray-600 mb-2 font-semibold">TC Compa-Ratio</p>
+                                                    <p className="text-5xl font-bold gradient-text">{analysisResult.tcCompaRatio}<span className="text-2xl">%</span></p>
+                                                </div>
+                                            </div>
+
+                                            {/* TC market range */}
+                                            <h4 className="text-sm font-bold text-gray-700 mb-3">Total Compensation Market Range</h4>
+                                            <div className="space-y-2 mb-6">
+                                                {[
+                                                    { label: '25th Percentile', value: analysisResult.tcMarket.p25 },
+                                                    { label: 'Median (50th)',    value: analysisResult.tcMarket.median },
+                                                    { label: '75th Percentile', value: analysisResult.tcMarket.p75 },
+                                                    { label: '90th Percentile', value: analysisResult.tcMarket.p90 },
+                                                ].map((item, idx) => (
+                                                    <div key={idx} className="flex justify-between py-2.5 border-b border-gray-100 last:border-b-0">
+                                                        <span className="text-gray-700 font-medium">{item.label}</span>
+                                                        <span className="text-gray-900 font-bold">${Math.round(item.value).toLocaleString()}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* TC progress bar */}
+                                            <div className="progress-bar mb-2">
+                                                <div className="progress-fill" style={{ width: `${Math.min(analysisResult.tcPercentile, 100)}%` }}></div>
+                                            </div>
+                                            <div className="flex justify-between text-xs text-gray-500 mb-4">
+                                                <span>Bottom 25%</span>
+                                                <span>Median</span>
+                                                <span>Top 10%</span>
+                                            </div>
+
+                                            {(analysisResult.userBonusTarget === null || analysisResult.userAnnualEquity === null) && (
+                                                <p className="text-xs text-gray-400">
+                                                    * Market typical values used for {[analysisResult.userBonusTarget === null && 'bonus', analysisResult.userAnnualEquity === null && 'equity'].filter(Boolean).join(' and ')}. Enter your actual figures above for a more precise total.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* AI COACH TAB */}
+                        {activeTab === 'chat' && (
+                            <div className="card overflow-hidden fade-in flex flex-col" style={{ height: 'calc(100vh - 250px)' }}>
+                                <div className="p-6 border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+                                    <div className="flex items-center gap-4">
+                                        <CoachCharacter size={60} />
+                                        <div>
+                                            <h2 className="text-2xl font-bold text-gray-900">AI Compensation Coach</h2>
+                                            <p className="text-gray-600 text-sm">Ask me anything about salaries, offers, or negotiation</p>
+                                        </div>
+                                    </div>
+                                    {analysisResult && (
+                                        <div className="mt-4 flex items-center gap-2 bg-white border border-green-200 rounded-xl px-4 py-3">
+                                            <span className="text-green-500 text-lg">✓</span>
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-800">Your compensation profile is loaded</p>
+                                                <p className="text-xs text-gray-500">
+                                                    {jobTitle} · Level {analysisResult.level} · {analysisResult.track} · ${analysisResult.salary.toLocaleString()} base · {analysisResult.percentile.toFixed(0)}th percentile
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {!analysisResult && (
+                                        <div className="mt-4 flex items-center gap-2 bg-white border border-amber-200 rounded-xl px-4 py-3">
+                                            <span className="text-amber-500 text-lg">💡</span>
+                                            <p className="text-xs text-gray-600">
+                                                <span className="font-semibold">Tip:</span> Run the <button onClick={() => setActiveTab('analyze')} className="text-blue-600 underline font-semibold">Compensation Analyzer</button> first and your results will automatically load into this chat.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                                
+                                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                    {messages.map((msg, idx) => (
+                                        <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} slide-in`}>
+                                            <div className={`max-w-[85%] rounded-2xl px-5 py-4 ${
+                                                msg.role === 'user' 
+                                                    ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white' 
+                                                    : 'bg-gray-100 text-gray-900'
+                                            }`}>
+                                                <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {isTyping && (
+                                        <div className="flex justify-start">
+                                            <div className="bg-gray-100 rounded-2xl px-5 py-4">
+                                                <div className="flex gap-2">
+                                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    <div ref={chatEndRef} />
+                                </div>
+
+                                <div className="border-t p-6 bg-gray-50">
+                                    {/* File preview strip */}
+                                    {uploadedFile && (
+                                        <div className="flex items-center gap-3 mb-3 bg-white border-2 border-blue-200 rounded-xl px-4 py-3">
+                                            <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                                                {uploadedFile.type === 'application/pdf' ? '📄' :
+                                                 uploadedFile.type.startsWith('image/') ? '🖼️' : '📝'}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-semibold text-gray-800 truncate">{uploadedFile.name}</p>
+                                                <p className="text-xs text-gray-500">{(uploadedFile.size / 1024).toFixed(0)} KB · Ready to send</p>
+                                            </div>
+                                            <button
+                                                onClick={() => setUploadedFile(null)}
+                                                className="text-gray-400 hover:text-red-500 transition-colors text-lg font-bold"
+                                            >×</button>
+                                        </div>
+                                    )}
+                                    {uploadError && (
+                                        <p className="text-xs text-red-500 mb-3 font-medium">{uploadError}</p>
+                                    )}
+
+                                    {/* Input row */}
+                                    <div className="flex gap-2 items-end">
+                                        {/* Upload button */}
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleFileUpload}
+                                            accept=".pdf,.png,.jpg,.jpeg,.webp,.txt"
+                                            className="hidden"
+                                        />
+                                        <button
+                                            onClick={() => { setUploadError(''); fileInputRef.current.click(); }}
+                                            className="w-11 h-11 rounded-xl bg-white border-2 border-gray-200 flex items-center justify-center hover:border-blue-400 hover:bg-blue-50 transition-all flex-shrink-0"
+                                            title="Upload offer letter, pay stub, or document"
+                                        >
+                                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                            </svg>
+                                        </button>
+
+                                        <input
+                                            type="text"
+                                            value={inputMessage}
+                                            onChange={(e) => setInputMessage(e.target.value)}
+                                            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                                            placeholder={uploadedFile ? "Add a note, or press Send..." : "Ask about compensation..."}
+                                            className="flex-1 px-5 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                                        />
+                                        <button
+                                            onClick={sendMessage}
+                                            disabled={(!inputMessage.trim() && !uploadedFile) || isTyping}
+                                            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                                        >
+                                            Send
+                                        </button>
+                                    </div>
+
+                                    {/* Helper text */}
+                                    <div className="flex justify-between items-center mt-3">
+                                        <p className="text-xs text-gray-400">
+                                            📎 Upload offer letters, pay stubs, or equity agreements (PDF, image, or text)
+                                        </p>
+                                        {subscriptionTier === 'free' && (
+                                            <p className="text-xs text-gray-500 font-medium">
+                                                {Math.max(0, 3 - Math.floor(messages.length / 2))} questions remaining
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* MARKET TAB */}
+                        {activeTab === 'market' && (
+                            <MarketTab
+                                jobFunctions={jobFunctions}
+                                marketData={marketData}
+                                levelMultipliers={levelMultipliers}
+                                trackMultipliers={trackMultipliers}
+                                locationAdjustments={locationAdjustments}
+                            />
+                        )}
+
+                        {/* LEARN TAB */}
+                        {activeTab === 'learn' && (
+                            <div className="space-y-6 fade-in">
+                                <div className="card p-8">
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                                        Learn <span className="gradient-text">Compensation Fundamentals</span>
+                                    </h2>
+                                    <p className="text-gray-600 mb-8">Deep dives into how compensation really works</p>
+
+                                    {/* Article Grid */}
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {learnArticles.map((article) => (
+                                            <div
+                                                key={article.id}
+                                                onClick={() => setSelectedArticle(article)}
+                                                className="card p-6 cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 group"
+                                            >
+                                                {/* Category badge */}
+                                                <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-3">
+                                                    {article.category}
+                                                </span>
+
+                                                {/* Title */}
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                                                    {article.title}
+                                                </h3>
+                                                <p className="text-sm font-semibold text-gray-500 mb-3">{article.subtitle}</p>
+
+                                                {/* Excerpt */}
+                                                <p className="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                                                    {article.excerpt}
+                                                </p>
+
+                                                {/* Meta */}
+                                                <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400">
+                                                    <span>{article.readTime}</span>
+                                                    <span>{article.publishDate}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Article Modal */}
+                        {selectedArticle && (
+                            <div 
+                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                                onClick={() => setSelectedArticle(null)}
+                            >
+                                <div 
+                                    className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Modal Header */}
+                                    <div className="p-6 border-b border-gray-100 flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-3">
+                                                {selectedArticle.category}
+                                            </span>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedArticle.title}</h2>
+                                            <p className="text-lg font-semibold text-gray-500 mb-3">{selectedArticle.subtitle}</p>
+                                            <div className="flex items-center gap-4 text-sm text-gray-400">
+                                                <span>{selectedArticle.readTime}</span>
+                                                <span>•</span>
+                                                <span>{selectedArticle.publishDate}</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => setSelectedArticle(null)}
+                                            className="ml-4 w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors flex-shrink-0"
+                                        >
+                                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    {/* Modal Content */}
+                                    <div className="flex-1 overflow-y-auto p-8">
+                                        <div className="prose prose-lg max-w-none">
+                                            {selectedArticle.content.split('\n').map((paragraph, idx) => {
+                                                // Handle headers
+                                                if (paragraph.startsWith('# ')) {
+                                                    return <h1 key={idx} className="text-3xl font-bold text-gray-900 mb-4 mt-8">{paragraph.slice(2)}</h1>;
+                                                }
+                                                if (paragraph.startsWith('## ')) {
+                                                    return <h2 key={idx} className="text-2xl font-bold text-gray-900 mb-3 mt-6">{paragraph.slice(3)}</h2>;
+                                                }
+                                                if (paragraph.startsWith('### ')) {
+                                                    return <h3 key={idx} className="text-xl font-bold text-gray-900 mb-2 mt-5">{paragraph.slice(4)}</h3>;
+                                                }
+                                                // Handle bold text **text**
+                                                if (paragraph.includes('**')) {
+                                                    const parts = paragraph.split('**');
+                                                    return (
+                                                        <p key={idx} className="text-gray-700 leading-relaxed mb-4">
+                                                            {parts.map((part, i) => 
+                                                                i % 2 === 1 ? <strong key={i} className="font-bold text-gray-900">{part}</strong> : part
+                                                            )}
+                                                        </p>
+                                                    );
+                                                }
+                                                // Handle blockquotes
+                                                if (paragraph.startsWith('> ')) {
+                                                    return <blockquote key={idx} className="border-l-4 border-blue-500 pl-4 italic text-gray-600 my-4">{paragraph.slice(2)}</blockquote>;
+                                                }
+                                                // Handle lists
+                                                if (paragraph.startsWith('- ')) {
+                                                    return <li key={idx} className="text-gray-700 leading-relaxed ml-6">{paragraph.slice(2)}</li>;
+                                                }
+                                                // Regular paragraphs
+                                                if (paragraph.trim()) {
+                                                    return <p key={idx} className="text-gray-700 leading-relaxed mb-4">{paragraph}</p>;
+                                                }
+                                                return null;
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Footer Disclaimer */}
+                    <footer className="bg-white border-t border-gray-100 mt-12">
+                        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-3">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-teal-500 flex items-center justify-center">
+                                    <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                    </svg>
+                                </div>
+                                <span className="text-sm font-bold gradient-text">CompCoach.ai</span>
+                            </div>
+                            <p className="text-xs text-gray-400 text-center leading-relaxed max-w-3xl">
+                                Market data on CompCoach.ai is based on a proprietary methodology informed by publicly available compensation research, industry surveys, and labor market trends. All figures are estimates intended to provide directional guidance and should not be used as the sole basis for compensation decisions. Individual results will vary based on company, industry, performance, and negotiation.
+                            </p>
+                            <p className="text-xs text-gray-300 flex-shrink-0">© 2026 CompCoach.ai</p>
+                        </div>
+                    </footer>
+
+                    {/* Paywall */}
+                    {showPaywall && (
+                        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                            <div className="card max-w-2xl w-full p-10 fade-in">
+                                <div className="text-center mb-8">
+                                    <CoachCharacter size={120} />
+                                </div>
+                                <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center">Unlock Your Full Potential</h2>
+                                <p className="text-gray-600 mb-10 text-center text-lg">
+                                    Get unlimited access to all tools and personalized coaching
+                                </p>
+
+                                <div className="grid md:grid-cols-2 gap-6 mb-10">
+                                    <div className="card p-6 border-2 border-blue-500">
+                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
+                                        <p className="text-sm text-gray-600 mb-4">Perfect for job seekers</p>
+                                        <p className="text-5xl font-bold gradient-text mb-6">$12<span className="text-lg">/mo</span></p>
+                                        <ul className="space-y-2 text-sm text-gray-700 mb-6">
+                                            <li>✓ Unlimited analyses</li>
+                                            <li>✓ Unlimited AI coaching</li>
+                                            <li>✓ Market intelligence</li>
+                                            <li>✓ Negotiation templates</li>
+                                        </ul>
+                                        <button
+                                            onClick={() => { setSubscriptionTier('individual'); setShowPaywall(false); }}
+                                            className="w-full btn-primary"
+                                        >
+                                            Start Pro
+                                        </button>
+                                    </div>
+
+                                    <div className="card p-6 border-2 border-teal-500">
+                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Premium</h3>
+                                        <p className="text-sm text-gray-600 mb-4">Maximum insights</p>
+                                        <p className="text-5xl font-bold gradient-text mb-6">$25<span className="text-lg">/mo</span></p>
+                                        <ul className="space-y-2 text-sm text-gray-700 mb-6">
+                                            <li>✓ Everything in Pro</li>
+                                            <li>✓ Equity valuation tools</li>
+                                            <li>✓ Career planning</li>
+                                            <li>✓ Priority support</li>
+                                        </ul>
+                                        <button
+                                            onClick={() => { setSubscriptionTier('premium'); setShowPaywall(false); }}
+                                            className="w-full bg-gradient-to-br from-teal-500 to-cyan-500 text-white py-3 px-6 rounded-xl font-bold hover:shadow-lg transition-all"
+                                        >
+                                            Start Premium
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button
+                                    onClick={() => setShowPaywall(false)}
+                                    className="w-full text-gray-600 hover:text-gray-900 font-semibold transition-colors"
+                                >
+                                    Continue with Free →
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<CompCoachApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>
