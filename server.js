@@ -41,7 +41,7 @@ app.get('/api/news', async (req, res) => {
     }
 
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=(compensation OR salary OR equity OR "pay equity" OR "total compensation" OR "tech salary")&language=en&sortBy=publishedAt&pageSize=6&apiKey=${process.env.NEWSAPI_KEY}`
+      `https://newsapi.org/v2/everything?q=("employee compensation" OR "salary negotiation" OR "tech salaries" OR "RSU" OR "stock options" OR "pay equity" OR "wage gap" OR "compensation package")&language=en&sortBy=publishedAt&pageSize=20&apiKey=${process.env.NEWSAPI_KEY}`
     );
 
     if (!response.ok) {
@@ -87,7 +87,21 @@ app.get('/api/news', async (req, res) => {
 
     // Format articles for frontend
     const news = data.articles
-      .filter(article => article.title && article.description && article.url)
+      .filter(article => {
+        if (!article.title || !article.description || !article.url) return false;
+        
+        const title = article.title.toLowerCase();
+        const desc = article.description.toLowerCase();
+        const combined = title + ' ' + desc;
+        
+        // Exclude sports-related articles
+        const sportsKeywords = ['nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'espn', 'sports', 'team', 'player', 'coach', 'game', 'season', 'championship'];
+        if (sportsKeywords.some(keyword => combined.includes(keyword))) return false;
+        
+        // Only include if it contains employment/compensation keywords
+        const requiredKeywords = ['salary', 'compensation', 'pay', 'wage', 'equity', 'rsu', 'stock option', 'employee', 'worker', 'tech', 'software', 'engineer', 'job', 'hiring', 'career'];
+        return requiredKeywords.some(keyword => combined.includes(keyword));
+      })
       .slice(0, 6)
       .map((article, idx) => ({
         title: article.title,
