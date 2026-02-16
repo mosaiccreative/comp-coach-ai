@@ -40,8 +40,9 @@ app.get('/api/news', async (req, res) => {
       return res.status(500).json({ error: 'NewsAPI key not configured' });
     }
 
+    // Very specific query - focus on employment compensation only
     const response = await fetch(
-      `https://newsapi.org/v2/everything?q=("employee compensation" OR "salary negotiation" OR "tech salaries" OR "RSU" OR "stock options" OR "pay equity" OR "wage gap" OR "compensation package")&language=en&sortBy=publishedAt&pageSize=20&apiKey=${process.env.NEWSAPI_KEY}`
+      `https://newsapi.org/v2/everything?q=("salary negotiation" OR "tech salaries" OR "pay equity" OR "wage gap" OR "salary transparency" OR "remote work pay" OR "compensation trends" OR "layoffs severance" OR "minimum wage" OR "living wage")&language=en&sortBy=publishedAt&pageSize=50&apiKey=${process.env.NEWSAPI_KEY}`
     );
 
     if (!response.ok) {
@@ -68,11 +69,83 @@ app.get('/api/news', async (req, res) => {
     // Helper to categorize article
     const categorize = (title) => {
       const lower = title.toLowerCase();
-      if (lower.includes('equity') || lower.includes('stock') || lower.includes('rsu')) return 'Equity';
-      if (lower.includes('remote') || lower.includes('hybrid')) return 'Remote Work';
+      if (lower.includes('equity') || lower.includes('stock') || lower.includes('rsu') || lower.includes('stock option')) return 'Equity';
+      if (lower.includes('remote') || lower.includes('hybrid') || lower.includes('wfh')) return 'Remote Work';
       if (lower.includes('negotiat')) return 'Negotiation';
       if (lower.includes('gender') || lower.includes('pay gap') || lower.includes('pay equity')) return 'Pay Equity';
+      if (lower.includes('layoff') || lower.includes('severance')) return 'Layoffs';
       return 'Market Trends';
+    };
+
+    // Strict filtering logic
+    const isRelevant = (article) => {
+      if (!article.title || !article.description || !article.url) return false;
+      
+      const title = article.title.toLowerCase();
+      const desc = article.description.toLowerCase();
+      const source = article.source.name.toLowerCase();
+      const combined = `${title} ${desc}`;
+      
+      // HARD EXCLUDE - these automatically disqualify the article
+      const excludeKeywords = [
+        // Sports
+        'nfl', 'nba', 'mlb', 'nhl', 'mls', 'fifa', 'espn', 'athlete', 'quarterback', 'pitcher', 'playoffs',
+        // Corporate filings (not news)
+        'inducement grant', 'nasdaq listing rule', '8-k', 'sec filing', 'form 10', 'announces appointment',
+        // Legal/Insurance
+        'workers compensation insurance', 'workers comp claim', 'settlement', 'lawsuit', 'court award',
+        // Job postings (not news)
+        'seeks', 'hiring for', 'job opening', 'apply now', 'careers page',
+        // Crypto/Finance (not employment)
+        'crypto', 'bitcoin', 'mining reward', 'staking reward',
+        // Government payments (not employment)
+        'stimulus', 'relief payment', 'tax refund', 'benefits claim'
+      ];
+      
+      if (excludeKeywords.some(keyword => combined.includes(keyword))) return false;
+      
+      // REQUIRED - must have at least ONE of these employment-related terms
+      const employmentTerms = [
+        'salary', 'salaries', 'wage', 'wages', 'pay', 'paid', 'compensation',
+        'employee', 'employees', 'worker', 'workers', 'staff',
+        'job', 'jobs', 'career', 'hiring', 'layoff', 'layoffs'
+      ];
+      
+      const hasEmploymentTerm = employmentTerms.some(term => combined.includes(term));
+      if (!hasEmploymentTerm) return false;
+      
+      // CONTEXT - if it mentions compensation, it should be about employment, not other contexts
+      if (combined.includes('compensation')) {
+        // Make sure it's employment compensation, not legal/insurance
+        const employmentContext = [
+          'employee compensation', 'executive compensation', 'tech compensation',
+          'salary', 'wage', 'pay equity', 'total comp', 'stock', 'equity',
+          'bonus', 'benefits package', 'rsu', 'stock option'
+        ];
+        if (!employmentContext.some(ctx => combined.includes(ctx))) return false;
+      }
+      
+      // TRUSTED SOURCES - prioritize business/tech/HR news sources
+      const trustedSources = [
+        'techcrunch', 'bloomberg', 'wsj', 'wall street journal', 'forbes', 'fortune',
+        'business insider', 'cnbc', 'reuters', 'financial times', 'ft.com',
+        'harvard business review', 'hbr', 'mit', 'wired', 'verge', 'ars technica',
+        'shrm', 'hr dive', 'linkedin', 'glassdoor', 'indeed'
+      ];
+      
+      const isTrustedSource = trustedSources.some(s => source.includes(s));
+      
+      // If not from trusted source, require stronger employment signals
+      if (!isTrustedSource) {
+        const strongSignals = [
+          'salary negotiation', 'tech salaries', 'pay equity', 'wage gap',
+          'compensation trends', 'remote work pay', 'layoff', 'severance',
+          'minimum wage', 'living wage', 'salary transparency'
+        ];
+        if (!strongSignals.some(signal => combined.includes(signal))) return false;
+      }
+      
+      return true;
     };
 
     // Gradient options
@@ -87,27 +160,17 @@ app.get('/api/news', async (req, res) => {
 
     // Format articles for frontend
     const news = data.articles
-      .filter(article => {
-        if (!article.title || !article.description || !article.url) return false;
-        
-        const title = article.title.toLowerCase();
-        const desc = article.description.toLowerCase();
-        const combined = title + ' ' + desc;
-        
-        // Exclude sports-related articles
-        const sportsKeywords = ['nfl', 'nba', 'mlb', 'nhl', 'soccer', 'football', 'basketball', 'baseball', 'hockey', 'espn', 'sports', 'team', 'player', 'coach', 'game', 'season', 'championship'];
-        if (sportsKeywords.some(keyword => combined.includes(keyword))) return false;
-        
-        // Only include if it contains employment/compensation keywords
-        const requiredKeywords = ['salary', 'compensation', 'pay', 'wage', 'equity', 'rsu', 'stock option', 'employee', 'worker', 'tech', 'software', 'engineer', 'job', 'hiring', 'career'];
-        return requiredKeywords.some(keyword => combined.includes(keyword));
-      })
+      .filter(isRelevant)
       .slice(0, 6)
       .map((article, idx) => ({
         title: article.title,
         excerpt: article.description,
         source: article.source.name,
         url: article.url,
+        time: getRelativeTime(article.publishedAt),
+        category: categorize(article.title),
+        gradient: gradients[idx % gradients.length]
+      }));
         time: getRelativeTime(article.publishedAt),
         category: categorize(article.title),
         gradient: gradients[idx % gradients.length]
