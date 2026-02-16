@@ -33,6 +33,80 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Get latest compensation news
+app.get('/api/news', async (req, res) => {
+  try {
+    if (!process.env.NEWSAPI_KEY) {
+      return res.status(500).json({ error: 'NewsAPI key not configured' });
+    }
+
+    const response = await fetch(
+      `https://newsapi.org/v2/everything?q=(compensation OR salary OR equity OR "pay equity" OR "total compensation" OR "tech salary")&language=en&sortBy=publishedAt&pageSize=6&apiKey=${process.env.NEWSAPI_KEY}`
+    );
+
+    if (!response.ok) {
+      console.error('NewsAPI error:', response.status);
+      return res.status(500).json({ error: 'Failed to fetch news' });
+    }
+
+    const data = await response.json();
+
+    // Helper function to get relative time
+    const getRelativeTime = (dateString) => {
+      const now = new Date();
+      const published = new Date(dateString);
+      const diffMs = now - published;
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffHours / 24);
+
+      if (diffHours < 1) return 'Just now';
+      if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
+    };
+
+    // Helper to categorize article
+    const categorize = (title) => {
+      const lower = title.toLowerCase();
+      if (lower.includes('equity') || lower.includes('stock') || lower.includes('rsu')) return 'Equity';
+      if (lower.includes('remote') || lower.includes('hybrid')) return 'Remote Work';
+      if (lower.includes('negotiat')) return 'Negotiation';
+      if (lower.includes('gender') || lower.includes('pay gap') || lower.includes('pay equity')) return 'Pay Equity';
+      return 'Market Trends';
+    };
+
+    // Gradient options
+    const gradients = [
+      'from-blue-400 to-cyan-500',
+      'from-purple-400 to-pink-500',
+      'from-emerald-400 to-teal-500',
+      'from-orange-400 to-red-500',
+      'from-indigo-400 to-violet-500',
+      'from-rose-400 to-pink-500'
+    ];
+
+    // Format articles for frontend
+    const news = data.articles
+      .filter(article => article.title && article.description && article.url)
+      .slice(0, 6)
+      .map((article, idx) => ({
+        title: article.title,
+        excerpt: article.description,
+        source: article.source.name,
+        url: article.url,
+        time: getRelativeTime(article.publishedAt),
+        category: categorize(article.title),
+        gradient: gradients[idx % gradients.length]
+      }));
+
+    res.json(news);
+
+  } catch (error) {
+    console.error('News fetch error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get user subscription
 app.get('/api/subscription', ClerkExpressRequireAuth(), async (req, res) => {
   try {

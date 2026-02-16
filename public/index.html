@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CompCoach.ai - Your Personal Compensation Advisor</title>
+    
+    <!-- Open Graph / Social Media Preview -->
+    <meta property="og:title" content="CompCoach.ai - Know Your Worth. Negotiate with Confidence.">
+    <meta property="og:description" content="AI-powered compensation analysis and expert negotiation coaching. Get market data, personalized insights, and guidance to maximize your earnings.">
+    <meta property="og:image" content="https://compcoach.ai/compcoachlogocard.png">
+    <meta property="og:url" content="https://compcoach.ai">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CompCoach.ai - Your Personal Compensation Advisor">
+    <meta name="twitter:description" content="AI-powered compensation analysis and expert negotiation coaching">
+    <meta name="twitter:image" content="https://compcoach.ai/compcoachlogocard.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -567,48 +581,99 @@
         ];
 
         // Coach Character SVG Component
-        const CoachCharacter = ({ size = 200, animated = false }) => (
-            <svg 
-                width={size} 
-                height={size} 
-                viewBox="0 0 200 200" 
-                className={animated ? "coach-float" : ""}
-            >
-                {/* Head */}
-                <circle cx="100" cy="70" r="35" fill="#2d7dd2" opacity="0.9"/>
+        // Modern Tech Vibe Character (Option 1)
+        const CoachCharacterTech = ({ size = 200 }) => (
+            <svg width={size} height={size} viewBox="0 0 200 200">
+                {/* Background circle - subtle */}
+                <circle cx="100" cy="100" r="90" fill="#f0f9ff" opacity="0.5"/>
                 
-                {/* Body */}
-                <ellipse cx="100" cy="130" rx="40" ry="50" fill="#1ba098" opacity="0.9"/>
+                {/* Head - clean geometric */}
+                <circle cx="100" cy="75" r="28" fill="#2d7dd2"/>
                 
-                {/* Arms */}
-                <ellipse cx="65" cy="120" rx="12" ry="35" fill="#1ba098" opacity="0.9" transform="rotate(-20 65 120)"/>
-                <ellipse cx="135" cy="120" rx="12" ry="35" fill="#1ba098" opacity="0.9" transform="rotate(20 135 120)"/>
+                {/* Neck */}
+                <rect x="92" y="100" width="16" height="12" fill="#2d7dd2" rx="2"/>
                 
-                {/* Legs */}
-                <rect x="85" y="165" width="12" height="30" rx="6" fill="#2d7dd2" opacity="0.9"/>
-                <rect x="103" y="165" width="12" height="30" rx="6" fill="#2d7dd2" opacity="0.9"/>
+                {/* Body - modern angular */}
+                <path d="M 70 112 L 130 112 L 125 160 L 75 160 Z" fill="#1ba098"/>
                 
-                {/* Face - Eyes */}
-                <circle cx="90" cy="65" r="4" fill="white"/>
-                <circle cx="110" cy="65" r="4" fill="white"/>
-                <circle cx="91" cy="65" r="2" fill="#1a202c"/>
-                <circle cx="111" cy="65" r="2" fill="#1a202c"/>
+                {/* Arms - holding laptop gesture */}
+                <path d="M 70 120 L 55 130 L 55 145 L 70 140" fill="#1ba098"/>
+                <path d="M 130 120 L 145 130 L 145 145 L 130 140" fill="#1ba098"/>
                 
-                {/* Smile */}
-                <path d="M 88 78 Q 100 85 112 78" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                {/* Laptop */}
+                <rect x="60" y="135" width="80" height="50" rx="3" fill="#1e293b"/>
+                <rect x="65" y="140" width="70" height="35" fill="#0ea5e9" opacity="0.3"/>
+                <line x1="70" y1="145" x2="130" y2="145" stroke="#0ea5e9" strokeWidth="1.5"/>
+                <line x1="70" y1="150" x2="120" y2="150" stroke="#0ea5e9" strokeWidth="1.5"/>
+                <line x1="70" y1="155" x2="125" y2="155" stroke="#0ea5e9" strokeWidth="1.5"/>
                 
-                {/* Whistle */}
-                <circle cx="125" cy="95" r="8" fill="#fbbf24" opacity="0.9"/>
-                <rect x="133" y="92" width="15" height="6" fill="#fbbf24" opacity="0.9"/>
-                <circle cx="148" cy="95" r="2" fill="#1a202c"/>
+                {/* Face - minimal, friendly */}
+                <circle cx="92" cy="72" r="3" fill="white"/>
+                <circle cx="108" cy="72" r="3" fill="white"/>
+                <path d="M 90 84 Q 100 88 110 84" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
                 
-                {/* Clipboard */}
-                <rect x="55" y="110" width="20" height="28" rx="2" fill="white" stroke="#cbd5e1" strokeWidth="2"/>
-                <line x1="60" y1="118" x2="70" y2="118" stroke="#94a3b8" strokeWidth="2"/>
-                <line x1="60" y1="125" x2="70" y2="125" stroke="#94a3b8" strokeWidth="2"/>
-                <line x1="60" y1="132" x2="70" y2="132" stroke="#94a3b8" strokeWidth="2"/>
+                {/* Data/Chart accent floating nearby */}
+                <g opacity="0.7">
+                    <rect x="150" y="60" width="35" height="25" rx="3" fill="white" stroke="#2d7dd2" strokeWidth="1.5"/>
+                    <polyline points="155,78 160,72 165,75 170,68 175,70 180,65" stroke="#10b981" strokeWidth="2" fill="none" strokeLinejoin="round"/>
+                </g>
             </svg>
         );
+
+        // Friendly Expert Character (Option 2)
+        const CoachCharacterExpert = ({ size = 200 }) => (
+            <svg width={size} height={size} viewBox="0 0 200 200">
+                {/* Background accent */}
+                <circle cx="100" cy="100" r="88" fill="url(#expertGradient)" opacity="0.15"/>
+                <defs>
+                    <linearGradient id="expertGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#2d7dd2"/>
+                        <stop offset="100%" stopColor="#1ba098"/>
+                    </linearGradient>
+                </defs>
+                
+                {/* Head - professional */}
+                <circle cx="100" cy="70" r="32" fill="#2d7dd2"/>
+                
+                {/* Professional attire hint - collar */}
+                <path d="M 85 98 L 100 105 L 115 98" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                
+                {/* Body - business casual */}
+                <path d="M 65 105 L 135 105 L 130 170 L 70 170 Z" fill="#1ba098"/>
+                
+                {/* Arms - confident, welcoming pose */}
+                <ellipse cx="58" cy="125" rx="10" ry="32" fill="#1ba098" transform="rotate(-15 58 125)"/>
+                <ellipse cx="142" cy="125" rx="10" ry="32" fill="#1ba098" transform="rotate(15 142 125)"/>
+                
+                {/* Hands */}
+                <circle cx="52" cy="155" r="7" fill="#2d7dd2"/>
+                <circle cx="148" cy="155" r="7" fill="#2d7dd2"/>
+                
+                {/* Face - warm, approachable */}
+                <circle cx="90" cy="67" r="4" fill="white"/>
+                <circle cx="110" cy="67" r="4" fill="white"/>
+                <circle cx="91" cy="67" r="2" fill="#1e293b"/>
+                <circle cx="111" cy="67" r="2" fill="#1e293b"/>
+                
+                {/* Friendly smile - confident */}
+                <path d="M 85 80 Q 100 87 115 80" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round"/>
+                
+                {/* Glasses - adds credibility */}
+                <rect x="84" y="64" width="13" height="10" rx="5" fill="none" stroke="white" strokeWidth="2" opacity="0.8"/>
+                <rect x="103" y="64" width="13" height="10" rx="5" fill="none" stroke="white" strokeWidth="2" opacity="0.8"/>
+                <line x1="97" y1="69" x2="103" y2="69" stroke="white" strokeWidth="2" opacity="0.8"/>
+                
+                {/* Compensation chart accent - subtle badge of expertise */}
+                <g opacity="0.8">
+                    <circle cx="145" cy="75" r="20" fill="white"/>
+                    <text x="145" y="73" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#10b981">$</text>
+                    <path d="M 135 82 L 145 78 L 155 82" stroke="#10b981" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                </g>
+            </svg>
+        );
+
+        // Default to Expert version (you can switch by changing this)
+        const CoachCharacter = CoachCharacterExpert;
 
         // ─── Market Tab Component ─────────────────────────────────────────────
         const MarketTab = ({ jobFunctions, marketData, levelMultipliers, trackMultipliers, locationAdjustments }) => {
@@ -1044,32 +1109,72 @@ This is where **intended** and **realized** diverge the most:
 
 ## Why This Matters for Negotiations
 
-When you negotiate, companies think in terms of **intended** comp:
+Here's the critical mistake most people make: **confusing realized comp with market value**.
 
-- "We're offering you $200K total comp!" (Base: $140K, Bonus: $20K target, Equity: $40K grant value)
+### The Trap: Stock Appreciation ≠ Your Market Worth
 
-But you should think in terms of **realized** comp:
+Let's say you were a Level 3 Software Engineer at NVIDIA a few years ago. Your offer was:
+- Base: $180K
+- Equity grant: $100K (valued at grant date)
+- **Intended total comp: $280K**
 
-- Actual likely outcome: $140K base + $16K bonus (80% payout) + $25K equity (if you're lucky) = $181K
+But NVIDIA's stock skyrocketed. Your equity vested at $600K instead of $100K. You **realized $680K total comp** that year.
+
+**Here's what NOT to do:** Walk into your next negotiation saying, *"I made $680K last year, so I need $680K to make a move."*
+
+**Why this backfires:**
+- Companies don't benchmark against your realized gains — they benchmark against **what your role was intended to pay**
+- Your windfall was stock appreciation, not a reflection of your market value
+- You'll immediately signal that you don't understand how compensation works
+
+### What Companies Actually Benchmark Against
+
+When negotiating, companies think in terms of **intended comp at grant**:
+
+- "We're offering a Level 4 Software Engineer $200K total comp" (Base: $140K, Bonus: $20K target, Equity: $40K grant value)
+
+They're benchmarking this against:
+- What other companies **grant** Level 4 engineers (not what employees realize after vesting)
+- Survey data from Radford, Mercer, Levels.fyi (all show grant values, not vested values)
+- Their internal pay bands for that level
+
+### The Right Way to Think About Intended vs. Realized
+
+**Understand intended comp** to:
+- Negotiate based on market benchmarks for your role/level
+- Know what the company is *actually* offering vs. the inflated pitch
+- Avoid looking naive by confusing stock gains with your worth
+
+**Understand realized comp** to:
+- Make personal financial decisions (can I afford this mortgage?)
+- Assess risk (how volatile is my income?)
+- Decide when to diversify (don't hold too much company stock)
 
 ### The Negotiation Insight
 
-**Ask for more equity or guaranteed compensation (base salary), not target bonus increases.** Here's why:
+**Always negotiate based on intended comp, but be realistic about what you'll actually receive.**
 
-1. Increasing your target bonus from 15% to 20% sounds great, but you'll likely only see 80% of that
-2. Increasing your equity grant by 500 shares costs the company nothing *today* (they're just diluting shareholders)
-3. Increasing your base salary by $10K costs them $10K guaranteed, so they resist more — but it's the only truly guaranteed comp
+When evaluating an offer:
+1. **Identify the intended comp**: Base + target bonus + equity grant value
+2. **Discount it realistically**: Assume 80% bonus payout, equity stays flat
+3. **Negotiate based on market benchmarks**: "Levels.fyi shows Level 4 SWE at $220K intended comp in SF. Your offer is at the 40th percentile. Can we discuss moving closer to market median?"
+
+**What to ask for:**
+- **More equity grant** (measured in shares or grant dollar value) — not vested value
+- **Higher base salary** — the only guaranteed component
+- **Sign-on bonus** to bridge any gap
+
+**What NOT to ask for:**
+- "I need $680K because that's what I made last year" (you'll get laughed out of the room)
+- Target bonus increases (they rarely pay out at 100%)
 
 ## The Bottom Line
 
-Employers budget for best-case scenarios (you hit targets, stock goes up). You should expect middle-case scenarios (you meet expectations, stock stays flat). 
+Employers budget for best-case scenarios (you hit targets, stock goes up). You should **negotiate** based on intended comp (market benchmarks), but **plan your finances** around realistic outcomes.
 
-**When evaluating offers, discount the "intended" numbers:**
-- Assume 80% bonus payout
-- Assume equity stays flat or declines
-- Focus on maximizing base salary
+**Don't mistake realized gains for market value.** A Level 3 engineer who made $1M due to NVIDIA's stock surge is still a Level 3 engineer in the market's eyes — not a $1M employee.
 
-The gap between intended and realized compensation is where companies save money and employees get disappointed.
+The gap between intended and realized compensation is where companies save money and employees either get pleasantly surprised (stock goes up) or disappointed (stock goes down). But neither scenario changes your negotiating position.
                     `
                 },
                 {
