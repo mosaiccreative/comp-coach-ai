@@ -474,6 +474,7 @@
         };
 
         // Sample news data
+        // News state - will fetch from API when live
         const sampleNews = [
             {
                 title: "Tech Salaries Surge 15% in Q1 2026",
@@ -481,7 +482,8 @@
                 time: "2 hours ago",
                 excerpt: "Software engineering compensation packages see unprecedented growth as AI demand accelerates...",
                 category: "Market Trends",
-                gradient: "from-blue-400 to-cyan-500"
+                gradient: "from-blue-400 to-cyan-500",
+                url: "https://linkedin.com/business/talent/blog"
             },
             {
                 title: "Remote Work Premium Narrows to 5%",
@@ -489,7 +491,8 @@
                 time: "5 hours ago",
                 excerpt: "New data shows remote positions now command only a 5% premium over hybrid roles...",
                 category: "Remote Work",
-                gradient: "from-purple-400 to-pink-500"
+                gradient: "from-purple-400 to-pink-500",
+                url: "https://www.shrm.org"
             },
             {
                 title: "Equity Compensation: RSUs vs Options in 2026",
@@ -497,7 +500,8 @@
                 time: "1 day ago",
                 excerpt: "Top VCs weigh in on the shift from stock options to RSUs in startup compensation...",
                 category: "Equity",
-                gradient: "from-emerald-400 to-teal-500"
+                gradient: "from-emerald-400 to-teal-500",
+                url: "https://twitter.com"
             },
             {
                 title: "Gender Pay Gap Narrows to 8% in Tech",
@@ -505,7 +509,8 @@
                 time: "1 day ago",
                 excerpt: "Progress continues as transparency laws drive equity in compensation practices...",
                 category: "Pay Equity",
-                gradient: "from-orange-400 to-red-500"
+                gradient: "from-orange-400 to-red-500",
+                url: "https://hbr.org"
             },
             {
                 title: "Negotiation Tactics That Backfire in 2026",
@@ -513,7 +518,8 @@
                 time: "2 days ago",
                 excerpt: "HR leaders reveal the most common mistakes candidates make during salary negotiations...",
                 category: "Negotiation",
-                gradient: "from-indigo-400 to-violet-500"
+                gradient: "from-indigo-400 to-violet-500",
+                url: "https://linkedin.com"
             },
         ];
 
@@ -760,6 +766,25 @@
             const [subscriptionTier, setSubscriptionTier] = useState('free');
             const [showPaywall, setShowPaywall] = useState(false);
             
+            // News state - fetched from API
+            const [news, setNews] = useState(sampleNews); // Start with static data
+            const [selectedArticle, setSelectedArticle] = useState(null);
+            
+            // Fetch live news on mount
+            useEffect(() => {
+                fetch('/api/news')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data && data.length > 0) {
+                            setNews(data);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to load news:', err);
+                        // Keep static news on error
+                    });
+            }, []);
+            
             // Analysis state
             const [jobTitle, setJobTitle] = useState('');
             const [company, setCompany] = useState('');
@@ -783,6 +808,365 @@
             const fileInputRef = useRef(null);
             const chatEndRef = useRef(null);
             const analysisInjectedRef = useRef(false);
+            
+            // Learn articles data
+            const learnArticles = [
+                {
+                    id: 'total-comp-employer',
+                    title: 'Understanding Total Comp from the Employer\'s Perspective',
+                    subtitle: 'Intended vs. Realized Compensation',
+                    category: 'Compensation Basics',
+                    readTime: '8 min read',
+                    publishDate: 'February 10, 2026',
+                    excerpt: 'Companies budget for your compensation very differently than you might think. Learn the gap between what they intend to pay and what you actually receive.',
+                    content: `
+# Understanding Total Comp from the Employer's Perspective
+
+When you receive a job offer, the total compensation number looks straightforward: base salary + bonus + equity = total comp. But here's what most employees don't understand: **what the company *intends* to pay you is often very different from what you'll *actually* receive.**
+
+## Intended Compensation
+
+This is what shows up in your offer letter and what HR budgets for. It includes:
+
+- **Base Salary**: The easiest part — this is guaranteed (assuming you keep your job)
+- **Target Bonus**: Notice the word "target." This is the *intended* bonus if you meet expectations. Most companies budget assuming 80-100% payout rates.
+- **Equity Grant Value**: Here's where it gets tricky. The company values your equity grant at the **grant date** using their current valuation.
+
+For example, if you're granted $100K in RSUs at a $50/share price, that's 2,000 shares. The company budgets $100K for your comp package.
+
+## Realized Compensation
+
+This is what you actually take home. Reality often differs:
+
+### Bonus Reality
+- If your company has a 1-5 rating system, statistically 60-70% of employees get a "3" (meets expectations)
+- A "3" might mean 80-100% of target bonus
+- High performers (4s and 5s) might get 120-150%, but they're the minority
+- In tough years, companies can (and do) pay 0% bonuses to preserve cash
+
+### Equity Reality  
+This is where **intended** and **realized** diverge the most:
+
+**For Public Companies:**
+- Your RSUs vest over time (typically 4 years)
+- Stock price fluctuates
+- A $100K grant could be worth $150K (if stock rises) or $40K (if it falls)
+- The company doesn't care — they gave you 2,000 shares, full stop
+
+**For Private Companies:**
+- The equity might never be liquid (company doesn't IPO or get acquired)
+- Even if it becomes liquid, the valuation at exit could be lower than grant
+- That $100K equity grant might realize as $0
+
+## Why This Matters for Negotiations
+
+When you negotiate, companies think in terms of **intended** comp:
+
+- "We're offering you $200K total comp!" (Base: $140K, Bonus: $20K target, Equity: $40K grant value)
+
+But you should think in terms of **realized** comp:
+
+- Actual likely outcome: $140K base + $16K bonus (80% payout) + $25K equity (if you're lucky) = $181K
+
+### The Negotiation Insight
+
+**Ask for more equity or guaranteed compensation (base salary), not target bonus increases.** Here's why:
+
+1. Increasing your target bonus from 15% to 20% sounds great, but you'll likely only see 80% of that
+2. Increasing your equity grant by 500 shares costs the company nothing *today* (they're just diluting shareholders)
+3. Increasing your base salary by $10K costs them $10K guaranteed, so they resist more — but it's the only truly guaranteed comp
+
+## The Bottom Line
+
+Employers budget for best-case scenarios (you hit targets, stock goes up). You should expect middle-case scenarios (you meet expectations, stock stays flat). 
+
+**When evaluating offers, discount the "intended" numbers:**
+- Assume 80% bonus payout
+- Assume equity stays flat or declines
+- Focus on maximizing base salary
+
+The gap between intended and realized compensation is where companies save money and employees get disappointed.
+                    `
+                },
+                {
+                    id: 'comp-ranges-postings',
+                    title: 'Common Misunderstandings with Comp Ranges in Job Postings',
+                    subtitle: 'What "$120K-$180K" Actually Means',
+                    category: 'Job Search',
+                    readTime: '6 min read',
+                    publishDate: 'February 12, 2026',
+                    excerpt: 'Salary ranges in job postings are often misleading. Here\'s what companies really mean when they post that wide range.',
+                    content: `
+# Common Misunderstandings with Comp Ranges in Job Postings
+
+You see a job posting: **"Base Salary: $120,000 - $180,000"**. You have 3 years of experience and think, *"I'll aim for the middle — $150K sounds fair."*
+
+Here's the reality: **you're probably not getting $150K.** And the company knows it.
+
+## Why Companies Post Wide Ranges
+
+There are a few reasons companies publish such wide salary bands:
+
+### 1. Legal Compliance (Pay Transparency Laws)
+Many states (California, New York, Colorado, Washington) now require salary ranges in job postings. Companies comply by posting their **entire job level's range** — not what they'll actually pay *you*.
+
+Example:
+- The role is "Senior Software Engineer" (Level 4)
+- Level 4 at the company spans: $120K (new L4) to $180K (top-of-band L4 with 8 years experience)
+- They're hiring someone with 2-3 years experience
+- **Realistic offer: $125K-$135K**
+
+The $180K top-of-range is reserved for internal promotions or exceptional external hires with deep expertise.
+
+### 2. Negotiation Buffer
+Posting a wide range gives the company flexibility. If they post "$130K-$140K" and you counter at $145K, they have no room. But if they post "$120K-$180K," they can offer $135K, you counter at $150K, they "meet you in the middle" at $142K, and everyone feels like they won.
+
+### 3. Geographic & Experience Flexibility
+The range might account for:
+- Someone in San Francisco (gets $160K) vs. someone remote in Texas (gets $130K)
+- Someone with 2 years experience (gets $125K) vs. someone with 6 years (gets $155K)
+
+But the posting doesn't tell you *which segment of the range applies to you*.
+
+## What the Range Actually Means
+
+Here's how to decode it:
+
+**The bottom 25% of the range ($120K-$135K):**
+- Entry-level for this role
+- Minimal experience or transferring from a different domain
+- Remote location or lower cost-of-living area
+
+**The middle 50% ($135K-$155K):**
+- Target experience level (what the job description asks for)
+- This is where *most* hires land
+- Standard location adjustments
+
+**The top 25% ($155K-$180K):**
+- Exceptional candidate with rare skills
+- Senior end of the level (borderline promotion)
+- High cost-of-living adjustment (SF/NYC)
+- **Or**: Already internal, getting a raise to stay
+
+## The Misunderstandings
+
+### Misunderstanding #1: "The midpoint is what they'll offer"
+**Reality**: The midpoint ($150K) is usually reserved for someone with 4-5 years of experience in the exact role, in a tier-1 location, with strong leverage.
+
+### Misunderstanding #2: "I can negotiate to the top of the range"
+**Reality**: The top 10-15% of the range is *not* on the table for external hires. It's for internal equity (someone who's been there 3 years and is a top performer).
+
+### Misunderstanding #3: "The range includes equity and bonus"
+**Reality**: Sometimes yes, sometimes no. If the posting says **"Total Compensation: $120K-$180K"**, that might include equity. But if it says **"Base Salary"**, it doesn't.
+
+**Always ask**: *"Is this base salary or total compensation?"*
+
+## How to Use the Range in Negotiations
+
+### 1. Anchor in the Middle-to-High Zone
+When they ask your expectations, don't say "the midpoint." Say:
+
+> *"Based on my experience and the responsibilities outlined, I'd be targeting the $145K-$155K range."*
+
+This signals you know the top isn't realistic, but you're aiming above the average.
+
+### 2. Ask What Segment You Fall Into
+During the interview:
+
+> *"I see the range is $120K-$180K. Based on my background, which part of that range would this role likely fall into?"*
+
+This forces them to reveal their budget before you share your number.
+
+### 3. Clarify Location & Level
+> *"Does this range account for remote work, or is it based on SF/NYC salaries?"*
+
+> *"Is this range for the entire level, or specifically for someone with 3 years of experience?"*
+
+## The Bottom Line
+
+When you see a wide salary range:
+- Assume you're in the **25th-60th percentile** of that range unless you're exceptionally qualified
+- The top 20% is usually not available for external hires
+- Always ask clarifying questions: *Base or total? Location-adjusted? Which part applies to my experience level?*
+
+**The range is a starting point, not a promise.** Your goal is to figure out where *you* realistically fall — and then negotiate up from there.
+                    `
+                },
+                {
+                    id: 'market-benchmarking',
+                    title: 'What is Market Benchmarking?',
+                    subtitle: 'How Do Companies Know How Much to Pay You?',
+                    category: 'Compensation Basics',
+                    readTime: '10 min read',
+                    publishDate: 'February 14, 2026',
+                    excerpt: 'Ever wonder how your company decided your salary? They\'re using market benchmarking data from surveys like Radford, Mercer, and Payscale.',
+                    content: `
+# What is Market Benchmarking?
+
+You've probably wondered: *How did my company decide to offer me $130K instead of $115K or $150K?* The answer is **market benchmarking** — the process companies use to figure out what to pay you based on what everyone else is paying for similar roles.
+
+## The Basics: What Is Market Benchmarking?
+
+Market benchmarking is when a company compares compensation for a specific role against external market data to determine:
+1. **What the "market rate" is** for that job
+2. **Where they want to position themselves** (e.g., pay at the 50th percentile, 75th percentile, etc.)
+3. **What adjustments to make** for location, experience, performance, etc.
+
+Think of it like this: If you're buying a used car, you check Kelley Blue Book to see what similar cars are selling for. Companies do the same thing with salaries — except instead of KBB, they use compensation surveys from vendors like Radford, Mercer, Payscale, and others.
+
+## Where Does the Market Data Come From?
+
+Companies don't just make up salary ranges. They buy access to **compensation surveys** that aggregate data from hundreds or thousands of companies.
+
+### Major Survey Providers
+
+**Radford (by Aon)**
+- Gold standard for tech companies
+- Focuses on high-growth, technology, and life sciences companies
+- Extremely detailed (breaks down by job level, location, company size, equity types, etc.)
+- Expensive ($15K-$100K+ per year depending on company size)
+
+**Mercer**
+- Broader industry coverage (not just tech)
+- Large enterprises use this
+- Global reach
+
+**Payscale**
+- More accessible for small/medium businesses
+- Crowdsourced + survey data
+- Cheaper than Radford/Mercer
+
+**Comp Analyst (ERI)**
+- Geographic cost-of-labor data
+- Helps companies adjust pay for remote workers
+
+**Levels.fyi & Glassdoor**
+- Crowdsourced, self-reported
+- Free (for basic data)
+- Less reliable but useful for employees researching their own market value
+
+### How the Surveys Work
+
+Companies participate in these surveys by submitting their own compensation data anonymously. In exchange, they get access to the aggregated data from all other participating companies.
+
+Example:
+- Google submits: "We pay Software Engineer ICs at Level 4 a median of $180K base in San Francisco"
+- Meta submits: "We pay Software Engineer ICs at E4 a median of $175K base in SF"
+- Stripe submits: "We pay Software Engineer ICs at L2 a median of $185K base in SF"
+
+The survey vendor aggregates this and reports back:
+- **50th percentile (median)**: $180K
+- **75th percentile**: $195K
+- **90th percentile**: $210K
+
+Now any company can see: *"If we want to pay at the 75th percentile for a Software Engineer Level 4 in SF, we should target $195K base."*
+
+## How Companies Use This Data
+
+Once a company has the survey data, here's their process:
+
+### Step 1: Match Your Job to a Survey Benchmark
+
+They take your role (let's say "Product Marketing Manager") and match it to the closest job description in the survey. This is called **job matching** or **job leveling**.
+
+They ask:
+- What's the scope of responsibility?
+- How much experience is required?
+- What's the impact on the business?
+
+Then they map you to a survey job code (e.g., "Marketing Manager 3" in Radford).
+
+### Step 2: Decide on Their Market Positioning
+
+Companies have a **compensation philosophy** — a policy on where they want to pay relative to the market.
+
+Examples:
+- **"We pay at the 50th percentile"** (median market rate)
+- **"We pay at the 75th percentile for top performers"**
+- **"We pay at the 60th percentile but offer better benefits/equity"**
+
+This is a strategic choice. Paying at the 75th percentile costs more but helps attract top talent. Paying at the 50th saves money but risks losing people to higher-paying competitors.
+
+### Step 3: Apply Adjustments
+
+They take the base market number and apply multipliers for:
+
+**Location:**
+- SF/NYC = 1.3x multiplier
+- Austin/Seattle = 1.1x
+- Remote (tier 2 cities) = 0.9x
+
+**Experience:**
+- Entry-level (Level 3) = 1.0x
+- Mid-level (Level 4) = 1.2x
+- Senior (Level 5) = 1.5x
+
+**Performance:**
+- Meets expectations = 1.0x
+- Exceeds expectations = 1.1x
+- Top performer = 1.2-1.3x
+
+### Example Calculation
+
+Let's say the market data shows:
+- **Median base salary** for Product Marketing Manager (Level 4) in SF: **$140K**
+
+Your company pays at the **65th percentile** (slightly above median to be competitive). The 65th percentile is **$150K**.
+
+But you're in **Austin** (0.95x location multiplier):
+- $150K × 0.95 = **$142,500**
+
+And you have **3 years of experience** (vs. the 5 years the survey assumes for Level 4), so they apply a **0.95x experience adjustment**:
+- $142,500 × 0.95 = **$135,375**
+
+They round to **$135K** and that becomes your offer.
+
+## Why This Matters for You
+
+### 1. You Can Benchmark Yourself
+
+You don't need Radford access — you can use free tools (Levels.fyi, Glassdoor, Payscale, LinkedIn Salary) to estimate your market value. Then you can ask:
+
+> *"Based on market data I've seen, this role typically pays $145K-$160K for someone with my experience in this location. Can you share how your offer of $135K compares to your internal benchmarks?"*
+
+### 2. You Can Negotiate Based on Positioning
+
+If you know they pay at the 50th percentile, you can say:
+
+> *"I understand your philosophy is to pay at market median. Given my track record of exceeding goals, I'd like to discuss an offer at the 65th-75th percentile to reflect my performance."*
+
+### 3. You Can Challenge Their Adjustments
+
+If they lowball you with a location adjustment:
+
+> *"I see the offer reflects a remote location discount. However, I'm delivering the same value as someone in your SF office. I'd like to discuss reducing or removing that adjustment."*
+
+## The Limitations of Market Benchmarking
+
+It's not a perfect science:
+
+- **Survey data lags reality** (data is 6-12 months old by the time it's published)
+- **Job matching is subjective** (is your "Product Marketing Manager" really the same as Radford's definition?)
+- **Companies can cherry-pick data** (pick the survey that shows lower numbers to justify a lower offer)
+- **Equity is hard to benchmark** (especially for startups — how do you value unvested equity in a Series B company?)
+
+## The Bottom Line
+
+Companies aren't pulling salary numbers out of thin air. They're using market benchmarking:
+1. Buy survey data (Radford, Mercer, Payscale, etc.)
+2. Match your job to a survey benchmark
+3. Decide where they want to pay (50th percentile? 75th?)
+4. Apply adjustments for location, level, experience, performance
+
+**You should do the same.**
+
+Use free tools (Levels.fyi, Glassdoor, Payscale) to research your market value. Then negotiate with data:
+- *"I'm seeing the market median for this role is $X. Your offer is at the 40th percentile. Can we discuss moving closer to market?"*
+
+The more you understand how companies set pay, the better you can negotiate.
+                    `
+                }
+            ];
 
             useEffect(() => {
                 chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1140,12 +1524,31 @@ When the user asks about their pay, negotiation, or next steps — use these num
                         <div className="max-w-7xl mx-auto px-6">
                             <div className="flex overflow-x-auto gap-1">
                                 {[
-                                    { id: 'home',     label: 'Home',        icon: '🏠' },
-                                    { id: 'analyze',  label: 'Compensation Analyzer', icon: '📊' },
-                                    { id: 'chat',     label: 'AI Coach',    icon: '💬' },
-                                    { id: 'market',   label: 'Market Data', icon: '📈' },
-                                    { id: 'negotiate',label: 'Negotiate',   icon: '🤝' },
-                                    { id: 'learn',    label: 'Learn',       icon: '📚' },
+                                    { 
+                                        id: 'home', 
+                                        label: 'Home',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                                    },
+                                    { 
+                                        id: 'analyze', 
+                                        label: 'Compensation Analyzer',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                    },
+                                    { 
+                                        id: 'chat', 
+                                        label: 'AI Coach',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                                    },
+                                    { 
+                                        id: 'market', 
+                                        label: 'Market Data',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                                    },
+                                    { 
+                                        id: 'learn', 
+                                        label: 'Learn',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                                    },
                                 ].map(tab => (
                                     <button
                                         key={tab.id}
@@ -1156,7 +1559,7 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                 : 'border-transparent text-gray-500 hover:text-gray-900 hover:border-gray-300'
                                         }`}
                                     >
-                                        <span>{tab.icon}</span>
+                                        {tab.icon}
                                         <span>{tab.label}</span>
                                     </button>
                                 ))}
@@ -1310,39 +1713,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                 )
                                             },
                                             {
-                                                id: 'negotiate',
-                                                title: 'Negotiation Toolkit',
-                                                desc: 'Scripts, strategies, and email templates',
-                                                cta: 'Start Negotiating',
-                                                color1: '#92400e', color2: '#b45309',
-                                                svg: (
-                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                                                        <rect x="12" y="6" width="110" height="88" rx="5" fill="white" opacity="0.12"/>
-                                                        <rect x="12" y="6" width="110" height="18" rx="5" fill="white" opacity="0.2"/>
-                                                        <text x="67" y="18" textAnchor="middle" fontSize="7" fontWeight="700" fill="white" opacity="0.9">OFFER LETTER</text>
-                                                        <line x1="20" y1="32" x2="114" y2="32" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/>
-                                                        <line x1="20" y1="42" x2="114" y2="42" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/>
-                                                        <line x1="20" y1="52" x2="100" y2="52" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/>
-                                                        <rect x="18" y="60" width="98" height="14" rx="2" fill="white" opacity="0.15"/>
-                                                        <text x="22" y="70" fontSize="7" fill="white" opacity="0.7">Base:</text>
-                                                        <text x="88" y="70" fontSize="8" fontWeight="800" fill="white">$130K</text>
-                                                        <line x1="20" y1="82" x2="80" y2="82" stroke="white" strokeWidth="1" strokeLinecap="round" opacity="0.3"/>
-                                                        <line x1="135" y1="50" x2="155" y2="50" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.7"/>
-                                                        <polyline points="148,44 158,50 148,56" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.7"/>
-                                                        <rect x="168" y="6" width="140" height="88" rx="5" fill="white" opacity="0.22"/>
-                                                        <rect x="168" y="6" width="140" height="18" rx="5" fill="white" opacity="0.32"/>
-                                                        <text x="238" y="18" textAnchor="middle" fontSize="7" fontWeight="700" fill="#92400e">COUNTER OFFER</text>
-                                                        <line x1="176" y1="32" x2="300" y2="32" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/>
-                                                        <line x1="176" y1="42" x2="300" y2="42" stroke="white" strokeWidth="1.2" strokeLinecap="round" opacity="0.4"/>
-                                                        <rect x="174" y="53" width="128" height="16" rx="2" fill="white" opacity="0.2"/>
-                                                        <text x="178" y="64" fontSize="7" fill="white" opacity="0.8">Base:</text>
-                                                        <text x="260" y="64" fontSize="9" fontWeight="900" fill="white">$155K</text>
-                                                        <circle cx="288" cy="84" r="14" fill="white" opacity="0.9"/>
-                                                        <polyline points="282,84 286,89 295,77" stroke="#b45309" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                                    </svg>
-                                                )
-                                            },
-                                            {
                                                 id: 'learn',
                                                 title: 'Learn',
                                                 desc: 'RSUs, equity, bonus structures, and comp fundamentals',
@@ -1370,33 +1740,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                         <rect x="278" y="98" width="8" height="4" rx="1" fill="#1e3a5f"/>
                                                         <line x1="274" y1="90" x2="272" y2="87" stroke="#1e3a5f" strokeWidth="1.2"/>
                                                         <line x1="290" y1="90" x2="292" y2="87" stroke="#1e3a5f" strokeWidth="1.2"/>
-                                                    </svg>
-                                                )
-                                            },
-                                            {
-                                                id: 'home',
-                                                title: 'Industry News',
-                                                desc: 'Compensation trends shaping the market',
-                                                cta: 'Read Latest',
-                                                color1: '#1e293b', color2: '#334155',
-                                                svg: (
-                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-                                                        <rect x="12" y="6" width="296" height="88" rx="5" fill="white" opacity="0.06"/>
-                                                        <rect x="12" y="6" width="296" height="20" rx="5" fill="white" opacity="0.14"/>
-                                                        <text x="160" y="19" textAnchor="middle" fontSize="9" fontWeight="800" fill="white" opacity="0.9" letterSpacing="2">COMPENSATION INSIDER</text>
-                                                        <rect x="20" y="32" width="185" height="58" rx="2" fill="white" opacity="0.05"/>
-                                                        <text x="20" y="44" fontSize="8" fontWeight="800" fill="white" opacity="0.85">Tech Pay Surges 12% Amid AI Hiring War</text>
-                                                        <line x1="20" y1="50" x2="200" y2="50" stroke="white" strokeWidth="1" opacity="0.3"/>
-                                                        <line x1="20" y1="58" x2="200" y2="58" stroke="white" strokeWidth="1" opacity="0.3"/>
-                                                        <line x1="20" y1="66" x2="190" y2="66" stroke="white" strokeWidth="1" opacity="0.3"/>
-                                                        <line x1="20" y1="74" x2="200" y2="74" stroke="white" strokeWidth="1" opacity="0.3"/>
-                                                        <line x1="20" y1="82" x2="175" y2="82" stroke="white" strokeWidth="1" opacity="0.25"/>
-                                                        <rect x="215" y="32" width="90" height="58" rx="2" fill="white" opacity="0.05"/>
-                                                        <text x="215" y="43" fontSize="7" fontWeight="700" fill="white" opacity="0.75">Equity Trends</text>
-                                                        <line x1="215" y1="49" x2="300" y2="49" stroke="white" strokeWidth="0.8" opacity="0.25"/>
-                                                        <line x1="215" y1="56" x2="295" y2="56" stroke="white" strokeWidth="0.8" opacity="0.25"/>
-                                                        <polyline points="218,83 232,75 246,78 260,67 274,64 290,56" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0.8"/>
-                                                        <circle cx="290" cy="56" r="3.5" fill="white" opacity="0.9"/>
                                                     </svg>
                                                 )
                                             }
@@ -1436,27 +1779,44 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                             View All →
                                         </button>
                                     </div>
-                                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6">
-                                        {sampleNews.map((news, idx) => (
-                                            <div
+                                    <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 snap-x snap-mandatory">
+                                        {news.map((article, idx) => (
+                                            <a
                                                 key={idx}
-                                                className="news-card card flex-shrink-0 w-80 overflow-hidden"
-                                                style={{animationDelay: `${idx * 0.1}s`}}
+                                                href={article.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="group card p-5 hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 flex flex-col flex-shrink-0 w-80 snap-start"
                                             >
-                                                <div className={`h-40 bg-gradient-to-br ${news.gradient} flex items-center justify-center p-6`}>
-                                                    <span className="badge bg-white/90 text-gray-900">
-                                                        {news.category}
+                                                {/* Category badge and timestamp */}
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full bg-gradient-to-r ${article.gradient} text-white`}>
+                                                        {article.category}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400 font-medium">{article.time}</span>
+                                                </div>
+
+                                                {/* Title */}
+                                                <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                                                    {article.title}
+                                                </h3>
+
+                                                {/* Excerpt */}
+                                                <p className="text-sm text-gray-600 mb-4 line-clamp-2 flex-grow">
+                                                    {article.excerpt}
+                                                </p>
+
+                                                {/* Source and read more */}
+                                                <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                                    <span className="text-xs text-gray-500 font-semibold">{article.source}</span>
+                                                    <span className="text-xs text-blue-600 font-semibold group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                                                        Read
+                                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/>
+                                                        </svg>
                                                     </span>
                                                 </div>
-                                                <div className="p-5">
-                                                    <div className="flex justify-between items-center mb-3">
-                                                        <span className="text-xs text-gray-500 font-medium">{news.time}</span>
-                                                    </div>
-                                                    <h3 className="text-base font-bold text-gray-900 mb-2 line-clamp-2">{news.title}</h3>
-                                                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{news.excerpt}</p>
-                                                    <p className="text-xs text-gray-500 font-medium">{news.source}</p>
-                                                </div>
-                                            </div>
+                                            </a>
                                         ))}
                                     </div>
                                 </div>
@@ -1961,6 +2321,130 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                 trackMultipliers={trackMultipliers}
                                 locationAdjustments={locationAdjustments}
                             />
+                        )}
+
+                        {/* LEARN TAB */}
+                        {activeTab === 'learn' && (
+                            <div className="space-y-6 fade-in">
+                                <div className="card p-8">
+                                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                                        Learn <span className="gradient-text">Compensation Fundamentals</span>
+                                    </h2>
+                                    <p className="text-gray-600 mb-8">Deep dives into how compensation really works</p>
+
+                                    {/* Article Grid */}
+                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {learnArticles.map((article) => (
+                                            <div
+                                                key={article.id}
+                                                onClick={() => setSelectedArticle(article)}
+                                                className="card p-6 cursor-pointer hover:shadow-lg transition-all duration-200 hover:-translate-y-1 group"
+                                            >
+                                                {/* Category badge */}
+                                                <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-3">
+                                                    {article.category}
+                                                </span>
+
+                                                {/* Title */}
+                                                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                                                    {article.title}
+                                                </h3>
+                                                <p className="text-sm font-semibold text-gray-500 mb-3">{article.subtitle}</p>
+
+                                                {/* Excerpt */}
+                                                <p className="text-sm text-gray-600 mb-4 leading-relaxed line-clamp-3">
+                                                    {article.excerpt}
+                                                </p>
+
+                                                {/* Meta */}
+                                                <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-xs text-gray-400">
+                                                    <span>{article.readTime}</span>
+                                                    <span>{article.publishDate}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Article Modal */}
+                        {selectedArticle && (
+                            <div 
+                                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                                onClick={() => setSelectedArticle(null)}
+                            >
+                                <div 
+                                    className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Modal Header */}
+                                    <div className="p-6 border-b border-gray-100 flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold mb-3">
+                                                {selectedArticle.category}
+                                            </span>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-1">{selectedArticle.title}</h2>
+                                            <p className="text-lg font-semibold text-gray-500 mb-3">{selectedArticle.subtitle}</p>
+                                            <div className="flex items-center gap-4 text-sm text-gray-400">
+                                                <span>{selectedArticle.readTime}</span>
+                                                <span>•</span>
+                                                <span>{selectedArticle.publishDate}</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => setSelectedArticle(null)}
+                                            className="ml-4 w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors flex-shrink-0"
+                                        >
+                                            <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    {/* Modal Content */}
+                                    <div className="flex-1 overflow-y-auto p-8">
+                                        <div className="prose prose-lg max-w-none">
+                                            {selectedArticle.content.split('\n').map((paragraph, idx) => {
+                                                // Handle headers
+                                                if (paragraph.startsWith('# ')) {
+                                                    return <h1 key={idx} className="text-3xl font-bold text-gray-900 mb-4 mt-8">{paragraph.slice(2)}</h1>;
+                                                }
+                                                if (paragraph.startsWith('## ')) {
+                                                    return <h2 key={idx} className="text-2xl font-bold text-gray-900 mb-3 mt-6">{paragraph.slice(3)}</h2>;
+                                                }
+                                                if (paragraph.startsWith('### ')) {
+                                                    return <h3 key={idx} className="text-xl font-bold text-gray-900 mb-2 mt-5">{paragraph.slice(4)}</h3>;
+                                                }
+                                                // Handle bold text **text**
+                                                if (paragraph.includes('**')) {
+                                                    const parts = paragraph.split('**');
+                                                    return (
+                                                        <p key={idx} className="text-gray-700 leading-relaxed mb-4">
+                                                            {parts.map((part, i) => 
+                                                                i % 2 === 1 ? <strong key={i} className="font-bold text-gray-900">{part}</strong> : part
+                                                            )}
+                                                        </p>
+                                                    );
+                                                }
+                                                // Handle blockquotes
+                                                if (paragraph.startsWith('> ')) {
+                                                    return <blockquote key={idx} className="border-l-4 border-blue-500 pl-4 italic text-gray-600 my-4">{paragraph.slice(2)}</blockquote>;
+                                                }
+                                                // Handle lists
+                                                if (paragraph.startsWith('- ')) {
+                                                    return <li key={idx} className="text-gray-700 leading-relaxed ml-6">{paragraph.slice(2)}</li>;
+                                                }
+                                                // Regular paragraphs
+                                                if (paragraph.trim()) {
+                                                    return <p key={idx} className="text-gray-700 leading-relaxed mb-4">{paragraph}</p>;
+                                                }
+                                                return null;
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         )}
                     </main>
 
