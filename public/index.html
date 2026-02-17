@@ -22,6 +22,7 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script
       data-clerk-publishable-key="pk_test_Z2VudWluZS1tYXJsaW4tMzEuY2xlcmsuYWNjb3VudHMuZGV2JA"
       src="https://genuine-marlin-31.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
@@ -322,7 +323,7 @@
     <div id="root" style="position: relative; z-index: 2;"></div>
 
     <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
+        const { useState, useEffect, useRef, useMemo, useCallback } = React;
 
         // Job functions with their job families
         const jobFunctions = {
@@ -868,6 +869,365 @@
             );
         };
         // ─────────────────────────────────────────────────────────────────────
+
+        // ═══════════════════════════════════════════════════════════════════
+        // COMPENSATION CALCULATOR
+        // ═══════════════════════════════════════════════════════════════════
+        const CALC_COLORS = { base: "#2d7dd2", bonus: "#1ba098", equity: "#8b5cf6" };
+        const CALC_YEARS = [2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029];
+        const HIST_YEARS = [2022, 2023, 2024, 2025];
+        const PROJ_YEARS = [2026, 2027, 2028, 2029];
+
+        const calcFmt = (n) => { if (!n && n !== 0) return ""; return "$" + Math.round(Number(n)).toLocaleString(); };
+        const calcFmtK = (n) => { if (n >= 1000) return `$${Math.round(n / 1000)}k`; return `$${n}`; };
+        const calcParseNum = (v) => { const n = parseFloat(String(v).replace(/[,$]/g, "")); return isNaN(n) ? 0 : n; };
+
+        const defaultHistoricalData = () => ({
+            2022: { intended: { base: "", bonusPct: "", refreshGrant: "" }, realized: { base: "", bonusPaid: "", equityVested: "" } },
+            2023: { intended: { base: "", bonusPct: "", refreshGrant: "" }, realized: { base: "", bonusPaid: "", equityVested: "" } },
+            2024: { intended: { base: "", bonusPct: "", refreshGrant: "" }, realized: { base: "", bonusPaid: "", equityVested: "" } },
+            2025: { intended: { base: "", bonusPct: "", refreshGrant: "" }, realized: { base: "", bonusPaid: "", equityVested: "" } },
+        });
+
+        const defaultFutureData = () => ({
+            2026: { intended: { baseIncreasePct: "3", bonusTargetPct: "", refreshGrant: "" }, realized: { baseIncreasePct: "3", bonusTargetPct: "", unvestedEquity: "", refreshGrant: "" } },
+            2027: { intended: { baseIncreasePct: "3", bonusTargetPct: "", refreshGrant: "" }, realized: { baseIncreasePct: "3", bonusTargetPct: "", unvestedEquity: "", refreshGrant: "" } },
+            2028: { intended: { baseIncreasePct: "3", bonusTargetPct: "", refreshGrant: "" }, realized: { baseIncreasePct: "3", bonusTargetPct: "", unvestedEquity: "", refreshGrant: "" } },
+            2029: { intended: { baseIncreasePct: "3", bonusTargetPct: "", refreshGrant: "" }, realized: { baseIncreasePct: "3", bonusTargetPct: "", unvestedEquity: "", refreshGrant: "" } },
+        });
+
+        // Recharts components
+        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip: RTooltip, ResponsiveContainer } = Recharts;
+
+        const CalcTooltip = ({ active, payload, label }) => {
+            if (!active || !payload?.length) return null;
+            const total = payload.reduce((s, p) => s + (p.value || 0), 0);
+            return (
+                <div style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 18px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", fontFamily: "Poppins, sans-serif" }}>
+                    <p style={{ fontWeight: 700, fontSize: 14, color: "#1a202c", marginBottom: 8 }}>{label}</p>
+                    {payload.slice().reverse().map((p, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                            <div style={{ width: 10, height: 10, borderRadius: 3, background: p.color, flexShrink: 0 }} />
+                            <span style={{ fontSize: 13, color: "#64748b", flex: 1 }}>{p.name}</span>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: "#1a202c" }}>{calcFmt(p.value)}</span>
+                        </div>
+                    ))}
+                    <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#1a202c" }}>Total Comp</span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#1a202c" }}>{calcFmt(total)}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const CompChart = ({ data, title, subtitle }) => (
+            <div className="card overflow-hidden">
+                <div style={{ background: "linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%)", padding: "20px 24px" }}>
+                    <h3 style={{ color: "white", fontWeight: 700, fontSize: 17, margin: 0 }}>{title}</h3>
+                    <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: "4px 0 0" }}>{subtitle}</p>
+                </div>
+                <div style={{ padding: "24px 16px 16px" }}>
+                    <ResponsiveContainer width="100%" height={340}>
+                        <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 5 }} barCategoryGap="22%">
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                            <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#64748b", fontFamily: "Poppins", fontWeight: 600 }} axisLine={{ stroke: "#e2e8f0" }} tickLine={false} />
+                            <YAxis tickFormatter={calcFmtK} tick={{ fontSize: 11, fill: "#94a3b8", fontFamily: "Poppins" }} axisLine={false} tickLine={false} width={55} />
+                            <RTooltip content={<CalcTooltip />} cursor={{ fill: "rgba(45,125,210,0.06)" }} />
+                            <Bar dataKey="base" name="Base Salary" stackId="comp" fill={CALC_COLORS.base} radius={[0, 0, 0, 0]} />
+                            <Bar dataKey="bonus" name="Bonus" stackId="comp" fill={CALC_COLORS.bonus} radius={[0, 0, 0, 0]} />
+                            <Bar dataKey="equity" name="Equity" stackId="comp" fill={CALC_COLORS.equity} radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+        );
+
+        const CalcNumInput = ({ label, value, onChange, prefix = "$", placeholder = "0", small = false }) => (
+            <div>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 4 }}>{label}</label>
+                <div style={{ position: "relative" }}>
+                    {prefix && prefix !== "%" && (
+                        <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#94a3b8", pointerEvents: "none" }}>{prefix}</span>
+                    )}
+                    <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => onChange(e.target.value)}
+                        placeholder={placeholder}
+                        className="w-full border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors"
+                        style={{ padding: small ? "8px 12px" : "10px 14px", paddingLeft: prefix && prefix !== "%" ? 24 : 12, fontSize: 13, fontWeight: 500 }}
+                    />
+                    {prefix === "%" && (
+                        <span style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", fontSize: 13, color: "#94a3b8", pointerEvents: "none" }}>%</span>
+                    )}
+                </div>
+            </div>
+        );
+
+        const CalcSectionBadge = ({ children, color = "#2d7dd2" }) => (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "5px 14px", background: `${color}12`, borderRadius: 20, marginBottom: 12 }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: color }} />
+                <span style={{ fontSize: 12, fontWeight: 700, color, textTransform: "uppercase", letterSpacing: "0.05em" }}>{children}</span>
+            </div>
+        );
+
+        const CalcHistoricalColumn = ({ year, data, onUpdate }) => {
+            const upI = (field, val) => onUpdate(year, "intended", field, val);
+            const upR = (field, val) => onUpdate(year, "realized", field, val);
+            return (
+                <div style={{ minWidth: 160, flex: 1 }}>
+                    <div style={{ textAlign: "center", fontWeight: 700, fontSize: 14, color: "#1a202c", padding: "8px 0", borderBottom: "2px solid #e2e8f0", marginBottom: 12 }}>{year}</div>
+                    <div style={{ marginBottom: 16 }}>
+                        <CalcSectionBadge color="#2d7dd2">Intended</CalcSectionBadge>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <CalcNumInput label="Base Salary" value={data.intended.base} onChange={(v) => upI("base", v)} small />
+                            <CalcNumInput label="Bonus Target" value={data.intended.bonusPct} onChange={(v) => upI("bonusPct", v)} prefix="%" placeholder="15" small />
+                            <CalcNumInput label="Refresh Grant" value={data.intended.refreshGrant} onChange={(v) => upI("refreshGrant", v)} small />
+                        </div>
+                    </div>
+                    <div>
+                        <CalcSectionBadge color="#8b5cf6">Realized</CalcSectionBadge>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <CalcNumInput label="Base Salary" value={data.realized.base} onChange={(v) => upR("base", v)} small />
+                            <CalcNumInput label="Bonus Paid" value={data.realized.bonusPaid} onChange={(v) => upR("bonusPaid", v)} small />
+                            <CalcNumInput label="Equity Vested" value={data.realized.equityVested} onChange={(v) => upR("equityVested", v)} small />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const CalcFutureColumn = ({ year, data, onUpdate }) => {
+            const upI = (field, val) => onUpdate(year, "intended", field, val);
+            const upR = (field, val) => onUpdate(year, "realized", field, val);
+            return (
+                <div style={{ minWidth: 160, flex: 1 }}>
+                    <div style={{ textAlign: "center", fontWeight: 700, fontSize: 14, color: "#1a202c", padding: "8px 0", borderBottom: "2px solid #e2e8f0", marginBottom: 12, position: "relative" }}>
+                        {year}
+                        <span style={{ position: "absolute", right: 0, top: 10, fontSize: 9, fontWeight: 600, color: "#2d7dd2", background: "#eff6ff", padding: "2px 8px", borderRadius: 10 }}>PROJECTED</span>
+                    </div>
+                    <div style={{ marginBottom: 16 }}>
+                        <CalcSectionBadge color="#2d7dd2">Intended</CalcSectionBadge>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <CalcNumInput label="Base Increase" value={data.intended.baseIncreasePct} onChange={(v) => upI("baseIncreasePct", v)} prefix="%" placeholder="3" small />
+                            <CalcNumInput label="Bonus Target" value={data.intended.bonusTargetPct} onChange={(v) => upI("bonusTargetPct", v)} prefix="%" placeholder="15" small />
+                            <CalcNumInput label="Refresh Grant" value={data.intended.refreshGrant} onChange={(v) => upI("refreshGrant", v)} small />
+                        </div>
+                    </div>
+                    <div>
+                        <CalcSectionBadge color="#8b5cf6">Realized</CalcSectionBadge>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            <CalcNumInput label="Base Increase" value={data.realized.baseIncreasePct} onChange={(v) => upR("baseIncreasePct", v)} prefix="%" placeholder="3" small />
+                            <CalcNumInput label="Bonus Target" value={data.realized.bonusTargetPct} onChange={(v) => upR("bonusTargetPct", v)} prefix="%" placeholder="15" small />
+                            <CalcNumInput label="Unvested Equity" value={data.realized.unvestedEquity} onChange={(v) => upR("unvestedEquity", v)} small />
+                            <CalcNumInput label="New Refresh Value" value={data.realized.refreshGrant} onChange={(v) => upR("refreshGrant", v)} small />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const CompensationCalculator = () => {
+            const [calcHistorical, setCalcHistorical] = useState(defaultHistoricalData);
+            const [calcFuture, setCalcFuture] = useState(defaultFutureData);
+            const [calcActiveSection, setCalcActiveSection] = useState("historical");
+
+            const updateHistorical = useCallback((year, type, field, value) => {
+                setCalcHistorical((prev) => ({ ...prev, [year]: { ...prev[year], [type]: { ...prev[year][type], [field]: value } } }));
+            }, []);
+
+            const updateFuture = useCallback((year, type, field, value) => {
+                setCalcFuture((prev) => ({ ...prev, [year]: { ...prev[year], [type]: { ...prev[year][type], [field]: value } } }));
+            }, []);
+
+            const { intendedData, realizedData } = useMemo(() => {
+                const intended = [];
+                const realized = [];
+
+                for (const yr of HIST_YEARS) {
+                    const d = calcHistorical[yr];
+                    const iBase = calcParseNum(d.intended.base);
+                    const iBonus = iBase * (calcParseNum(d.intended.bonusPct) / 100);
+                    const iEquity = calcParseNum(d.intended.refreshGrant);
+                    intended.push({ year: String(yr), base: iBase, bonus: Math.round(iBonus), equity: iEquity });
+
+                    const rBase = calcParseNum(d.realized.base);
+                    const rBonus = calcParseNum(d.realized.bonusPaid);
+                    const rEquity = calcParseNum(d.realized.equityVested);
+                    realized.push({ year: String(yr), base: rBase, bonus: rBonus, equity: rEquity });
+                }
+
+                let prevIntendedBase = calcParseNum(calcHistorical[2025]?.intended?.base) || 0;
+                let prevRealizedBase = calcParseNum(calcHistorical[2025]?.realized?.base) || 0;
+
+                for (const yr of PROJ_YEARS) {
+                    const d = calcFuture[yr];
+                    const iIncrease = calcParseNum(d.intended.baseIncreasePct) / 100;
+                    const iBase = Math.round(prevIntendedBase * (1 + iIncrease));
+                    const iBonus = Math.round(iBase * (calcParseNum(d.intended.bonusTargetPct) / 100));
+                    const iEquity = calcParseNum(d.intended.refreshGrant);
+                    intended.push({ year: String(yr), base: iBase, bonus: iBonus, equity: iEquity });
+                    prevIntendedBase = iBase;
+
+                    const rIncrease = calcParseNum(d.realized.baseIncreasePct) / 100;
+                    const rBase = Math.round(prevRealizedBase * (1 + rIncrease));
+                    const rBonus = Math.round(rBase * (calcParseNum(d.realized.bonusTargetPct) / 100));
+                    const rEquity = calcParseNum(d.realized.unvestedEquity) + calcParseNum(d.realized.refreshGrant);
+                    realized.push({ year: String(yr), base: rBase, bonus: rBonus, equity: rEquity });
+                    prevRealizedBase = rBase;
+                }
+
+                return { intendedData: intended, realizedData: realized };
+            }, [calcHistorical, calcFuture]);
+
+            const summaryStats = useMemo(() => {
+                const latestI = intendedData[intendedData.length - 1];
+                const latestR = realizedData[realizedData.length - 1];
+                const curI = intendedData[3];
+                const curR = realizedData[3];
+                const iTotal2029 = (latestI?.base || 0) + (latestI?.bonus || 0) + (latestI?.equity || 0);
+                const rTotal2029 = (latestR?.base || 0) + (latestR?.bonus || 0) + (latestR?.equity || 0);
+                const iTotal2025 = (curI?.base || 0) + (curI?.bonus || 0) + (curI?.equity || 0);
+                const rTotal2025 = (curR?.base || 0) + (curR?.bonus || 0) + (curR?.equity || 0);
+                const iGrowth = iTotal2025 > 0 ? ((iTotal2029 - iTotal2025) / iTotal2025 * 100).toFixed(1) : 0;
+                const rGrowth = rTotal2025 > 0 ? ((rTotal2029 - rTotal2025) / rTotal2025 * 100).toFixed(1) : 0;
+                const gap2029 = rTotal2029 - iTotal2029;
+                return { iTotal2029, rTotal2029, iTotal2025, rTotal2025, iGrowth, rGrowth, gap2029 };
+            }, [intendedData, realizedData]);
+
+            const hasData = intendedData.some(d => d.base > 0 || d.bonus > 0 || d.equity > 0);
+
+            return (
+                <div className="space-y-6 fade-in">
+                    {/* Header */}
+                    <div className="card p-8">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%)" }}>
+                                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M12 20V10M18 20V4M6 20v-4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-3xl font-bold text-gray-900">Compensation <span className="gradient-text">Calculator</span></h2>
+                            </div>
+                        </div>
+                        <p className="text-gray-600 text-base leading-relaxed max-w-2xl">
+                            Compare your <strong style={{ color: "#2d7dd2" }}>intended compensation</strong> (what you expected) against your <strong style={{ color: "#8b5cf6" }}>realized compensation</strong> (what you actually earned) — and project both into the future.
+                        </p>
+                    </div>
+
+                    {/* Summary Cards */}
+                    {hasData && (
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {[
+                                { label: "2025 Intended TC", value: calcFmt(summaryStats.iTotal2025), color: "#2d7dd2" },
+                                { label: "2025 Realized TC", value: calcFmt(summaryStats.rTotal2025), color: "#8b5cf6" },
+                                { label: "2029 Intended TC", value: calcFmt(summaryStats.iTotal2029), sub: `${summaryStats.iGrowth}% growth`, color: "#2d7dd2" },
+                                { label: "2029 Realized TC", value: calcFmt(summaryStats.rTotal2029), sub: `${summaryStats.rGrowth}% growth`, color: "#8b5cf6" },
+                                { label: "2029 Gap", value: (summaryStats.gap2029 >= 0 ? "+" : "") + calcFmt(summaryStats.gap2029), color: summaryStats.gap2029 >= 0 ? "#1ba098" : "#ef4444", sub: summaryStats.gap2029 >= 0 ? "Realized exceeds intended" : "Realized below intended" },
+                            ].map((card, i) => (
+                                <div key={i} className="card p-4" style={{ borderTop: `3px solid ${card.color}` }}>
+                                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">{card.label}</p>
+                                    <p className="text-xl font-extrabold" style={{ color: card.color }}>{card.value}</p>
+                                    {card.sub && <p className="text-xs text-gray-400 mt-1">{card.sub}</p>}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Charts side-by-side */}
+                    {hasData && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            <CompChart data={intendedData} title="Intended Compensation" subtitle="Base + Bonus Target + Refresh Grant Value" />
+                            <CompChart data={realizedData} title="Realized Compensation" subtitle="Base + Actual Bonus + Equity Vested (W-2)" />
+                        </div>
+                    )}
+
+                    {/* Shared Legend */}
+                    {hasData && (
+                        <div className="flex justify-center gap-7 py-2">
+                            {[
+                                { color: CALC_COLORS.base, label: "Base Salary" },
+                                { color: CALC_COLORS.bonus, label: "Bonus" },
+                                { color: CALC_COLORS.equity, label: "Equity" },
+                            ].map((item) => (
+                                <div key={item.label} className="flex items-center gap-2">
+                                    <div style={{ width: 14, height: 14, borderRadius: 4, background: item.color }} />
+                                    <span className="text-sm font-semibold text-gray-500">{item.label}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Data Entry */}
+                    <div className="card overflow-hidden">
+                        {/* Tabs */}
+                        <div className="flex border-b-2 border-gray-100">
+                            {[
+                                { id: "historical", label: "Historical Data", sub: "2022–2025" },
+                                { id: "future", label: "Future Projections", sub: "2026–2029" },
+                            ].map((tab) => (
+                                <button
+                                    key={tab.id}
+                                    onClick={() => setCalcActiveSection(tab.id)}
+                                    className={`flex-1 py-4 px-6 text-center transition-all border-b-3 ${
+                                        calcActiveSection === tab.id
+                                            ? 'bg-white border-blue-500'
+                                            : 'bg-gray-50 border-transparent hover:bg-gray-100'
+                                    }`}
+                                    style={{ borderBottomWidth: 3, borderBottomColor: calcActiveSection === tab.id ? '#2d7dd2' : 'transparent' }}
+                                >
+                                    <span className={`block font-bold text-sm ${calcActiveSection === tab.id ? 'text-gray-900' : 'text-gray-400'}`}>{tab.label}</span>
+                                    <span className="text-xs text-gray-400 font-medium">{tab.sub}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="p-7">
+                            {/* Instruction */}
+                            <div className="bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+                                <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
+                                </svg>
+                                <p className="text-sm text-gray-600 leading-relaxed">
+                                    {calcActiveSection === "historical"
+                                        ? "Enter your actual compensation data for each year. Intended = what you were awarded/expected. Realized = what you actually received (W-2 values)."
+                                        : "Set your projection assumptions for each future year. Base increases compound from your 2025 base. Realized equity = unvested shares at today's price + expected new refresh grant value."}
+                                </p>
+                            </div>
+
+                            {/* Historical grid */}
+                            {calcActiveSection === "historical" && (
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {HIST_YEARS.map((yr) => (
+                                        <CalcHistoricalColumn key={yr} year={yr} data={calcHistorical[yr]} onUpdate={updateHistorical} />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Future grid */}
+                            {calcActiveSection === "future" && (
+                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {PROJ_YEARS.map((yr) => (
+                                        <CalcFutureColumn key={yr} year={yr} data={calcFuture[yr]} onUpdate={updateFuture} />
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Methodology note */}
+                    <div className="card p-4 border border-gray-100">
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                            <strong className="text-gray-500">Methodology:</strong> Intended compensation = base salary + bonus at target % + annual refresh grant value at time of award.
+                            Realized compensation = base salary + actual bonus paid + equity value at time of vesting (W-2 reportable).
+                            Future base salaries compound annually from 2025 actuals. Equity projections are estimates and assume no stock price changes unless reflected in your inputs.
+                        </p>
+                    </div>
+                </div>
+            );
+        };
+        // ═══════════════════════════════════════════════════════════════════
 
         const CompCoachApp = () => {
             const [activeTab, setActiveTab] = useState('home');
@@ -2033,6 +2393,11 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                         icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                                     },
                                     { 
+                                        id: 'calculator', 
+                                        label: 'Comp Calculator',
+                                        icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20V10M18 20V4M6 20v-4"/></svg>
+                                    },
+                                    { 
                                         id: 'learn', 
                                         label: 'Learn',
                                         icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
@@ -2911,6 +3276,11 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                     </div>
                                 </div>
                             )
+                        )}
+
+                        {/* CALCULATOR TAB */}
+                        {activeTab === 'calculator' && (
+                            <CompensationCalculator />
                         )}
 
                         {/* LEARN TAB */}
