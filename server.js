@@ -180,6 +180,52 @@ app.get('/api/news', async (req, res) => {
   }
 });
 
+// Waitlist signup (public endpoint - no auth required)
+app.post('/api/waitlist', async (req, res) => {
+  try {
+    const { email, name, tier } = req.body;
+
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: 'Valid email required' });
+    }
+
+    // Check if email already exists
+    const { data: existing } = await supabase
+      .from('waitlist')
+      .select('id')
+      .eq('email', email.toLowerCase())
+      .single();
+
+    if (existing) {
+      return res.json({ success: true, message: 'Already on waitlist!' });
+    }
+
+    // Add to waitlist
+    const { data, error} = await supabase
+      .from('waitlist')
+      .insert({
+        email: email.toLowerCase(),
+        name: name || null,
+        tier_interest: tier || 'pro',
+        source: 'website',
+        status: 'pending'
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Waitlist error:', error);
+      return res.status(500).json({ error: 'Failed to join waitlist' });
+    }
+
+    res.json({ success: true, message: 'Added to waitlist!' });
+
+  } catch (error) {
+    console.error('Waitlist signup error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get user subscription
 app.get('/api/subscription', ClerkExpressRequireAuth(), async (req, res) => {
   try {
