@@ -1019,6 +1019,12 @@
             const [news, setNews] = useState(sampleNews); // Start with static data
             const [selectedArticle, setSelectedArticle] = useState(null);
             
+            // Waitlist state
+            const [waitlistEmail, setWaitlistEmail] = useState('');
+            const [waitlistName, setWaitlistName] = useState('');
+            const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+            const [waitlistError, setWaitlistError] = useState('');
+            
             // Fetch live news on mount
             useEffect(() => {
                 fetch('/api/news')
@@ -1453,6 +1459,123 @@ Use free tools (Levels.fyi, Glassdoor, Payscale) to research your market value. 
 - *"I'm seeing the market median for this role is $X. Your offer is at the 40th percentile. Can we discuss moving closer to market?"*
 
 The more you understand how companies set pay, the better you can negotiate.
+                    `
+                },
+                {
+                    id: 'role-vs-person',
+                    title: 'Why Your Manager Says "The Role Doesn\'t Pay That Much"',
+                    subtitle: 'Understanding How Companies Think About Your Compensation',
+                    category: 'Compensation Basics',
+                    readTime: '7 min read',
+                    publishDate: 'February 17, 2026',
+                    excerpt: 'Ever felt like you deserve more than you\'re getting paid? Here\'s the uncomfortable truth about why companies separate "you" from "your job" when deciding compensation.',
+                    content: `
+# Why Your Manager Says "The Role Doesn't Pay That Much" (And What It Really Means)
+
+You're a high performer. You're doing VP-level work. Your manager even says you're "ready for the next level." So why aren't you getting paid like one?
+
+Here's the harsh reality: **Companies don't pay for who you are or what you're capable of. They pay for the job you're doing.**
+
+## The Role vs. The Person
+
+When compensation teams benchmark your pay, they're not asking: "What is [Your Name] worth?"
+
+They're asking: "What does the market pay for a Product Manager Level 3 in San Francisco?"
+
+**The difference matters.**
+
+You might be the best Product Manager in the company. You might be capable of running the entire product org. But if your **job description** says "Product Manager, Level 3," that's what the company benchmarks against—not your potential.
+
+### Why This Feels Unfair (But Isn't)
+
+From your perspective, this feels like the company is undervaluing you. You think: *"I'm doing the work of a VP, so pay me like one."*
+
+But from the company's perspective, they're thinking: *"We hired you for this role. The role has a market rate. Paying you above market creates internal inequities and sets a bad precedent."*
+
+**The disconnect:** You're focused on your capabilities. They're focused on the role's requirements.
+
+## What This Means for You
+
+### 1. Promotions Matter More Than Raises
+
+If you want a significant pay increase, you need a **title change**, not just a merit raise.
+
+- A 3-5% annual raise keeps you at market for your current role
+- A promotion to the next level (e.g., Product Manager → Senior Product Manager) can mean a 15-30% increase
+
+**Why?** Because the new role has a higher market benchmark.
+
+### 2. "I Deserve More" Isn't a Negotiation Strategy
+
+Saying "I deserve more money because I'm a high performer" rarely works.
+
+**What doesn't work:**  
+*"I'm doing VP-level work, so I should be paid like a VP."*
+
+**What does work:**  
+*"My responsibilities have expanded to include [X, Y, Z]. These responsibilities align with the Senior Product Manager role. Can we discuss a promotion?"*
+
+The first focuses on you. The second focuses on the role evolving.
+
+### 3. Your Manager Can't Just Pay You More
+
+Even if your manager thinks you're underpaid, they can't arbitrarily give you a raise.
+
+Compensation teams benchmark roles, not people. If your manager tries to pay you 20% above the market rate for your role, comp will flag it as:
+- An internal equity issue (why does this person make more than peers in the same role?)
+- A budget problem (we didn't allocate for this)
+- A retention risk (if we pay them above market now, what happens when they leave?)
+
+**Your manager's job** is to help you get promoted into a higher-paying role—not to bend the compensation structure.
+
+## The Uncomfortable Truth About "Paying for Potential"
+
+Companies **don't pay for potential**. They pay for the value you're delivering **right now** in your **current role**.
+
+If you're "ready for the next level," great—but you don't get paid like the next level until you're actually promoted.
+
+**Why companies do this:**
+- Paying someone above their role's market rate creates internal inequity
+- It sets a precedent that "the loudest person gets the raise"
+- It leads to dissatisfaction when the employee realizes more money ≠ more fulfillment
+
+## What You Can Do
+
+### 1. Ask for a Promotion, Not Just a Raise
+
+If you're doing work above your level, build the case for a promotion:
+- Document how your responsibilities have grown
+- Show how you're meeting the next level's requirements
+- Ask: *"What do I need to do to be promoted to Senior [Role]?"*
+
+### 2. Understand Your Role's Market Rate
+
+Use tools like Levels.fyi, Glassdoor, or Payscale to see what the market pays for **your role** (not your capability).
+
+If you're paid below market for your role, you have leverage:  
+*"Market data shows [Role] at [Company Size] in [Location] pays $X. I'm currently at $Y. Can we discuss a market adjustment?"*
+
+### 3. Recognize When It's Time to Leave
+
+If you're consistently doing work above your level and not getting promoted, it might be time to leave.
+
+**Red flags:**
+- You've been "ready for promotion" for 2+ years
+- Your manager says "there's no headcount for that level"
+- You're doing VP work but stuck at mid-level pay
+
+**Reality check:** Sometimes the fastest way to get paid fairly is to get promoted externally.
+
+## The Bottom Line
+
+Companies pay for roles, not people. Your ambition, capability, and potential don't change your market value—your **job title** does.
+
+If you want more money:
+1. Get promoted (title change = new benchmark)
+2. Negotiate a market adjustment (if you're below market for your role)
+3. Leave for a higher-level role elsewhere
+
+**The uncomfortable truth:** "I deserve more" is about you. "This role should pay more" is about the market. Only one of those arguments works.
                     `
                 }
             ];
@@ -1954,6 +2077,82 @@ When the user asks about their pay, negotiation, or next steps — use these num
                         {/* HOME PAGE */}
                         {activeTab === 'home' && (
                             <div className="space-y-12 fade-in">
+                                {/* Beta Signup Banner - Top */}
+                                {!waitlistSubmitted && (
+                                    <div className="card p-6 text-center bg-gradient-to-br from-blue-50 to-teal-50">
+                                        <div className="max-w-4xl mx-auto">
+                                            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                                                <div className="flex-1 text-left">
+                                                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                                        🎉 Join the Free Beta
+                                                    </h3>
+                                                    <p className="text-sm text-gray-600">
+                                                        Get full access to CompCoach. No credit card required. Limited spots.
+                                                    </p>
+                                                </div>
+                                                <div className="flex gap-2 w-full md:w-auto">
+                                                    <input
+                                                        type="email"
+                                                        placeholder="Enter your email"
+                                                        value={waitlistEmail}
+                                                        onChange={(e) => setWaitlistEmail(e.target.value)}
+                                                        onKeyPress={(e) => {
+                                                            if (e.key === 'Enter') {
+                                                                document.querySelector('.beta-banner-btn').click();
+                                                            }
+                                                        }}
+                                                        className="flex-1 md:w-64 px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                                    />
+                                                    <button
+                                                        className="btn-primary whitespace-nowrap px-6 py-2 text-sm beta-banner-btn"
+                                                        onClick={async () => {
+                                                            if (!waitlistEmail || !waitlistEmail.includes('@')) {
+                                                                setWaitlistError('Please enter a valid email');
+                                                                return;
+                                                            }
+                                                            
+                                                            try {
+                                                                const response = await fetch('/api/waitlist', {
+                                                                    method: 'POST',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ email: waitlistEmail, tier: 'beta' })
+                                                                });
+                                                                
+                                                                const data = await response.json();
+                                                                
+                                                                if (response.ok) {
+                                                                    setWaitlistSubmitted(true);
+                                                                    setWaitlistError('');
+                                                                } else {
+                                                                    setWaitlistError(data.error || 'Failed to join. Please try again.');
+                                                                }
+                                                            } catch (err) {
+                                                                setWaitlistError('Network error. Please try again.');
+                                                            }
+                                                        }}
+                                                    >
+                                                        Join Beta →
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {waitlistError && (
+                                                <p className="text-red-600 text-xs mt-2">{waitlistError}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                                
+                                {waitlistSubmitted && (
+                                    <div className="card p-4 bg-green-50 border border-green-200">
+                                        <div className="flex items-center justify-center gap-2 text-green-800">
+                                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                            </svg>
+                                            <span className="font-semibold text-sm">You're on the beta list! Check your email.</span>
+                                        </div>
+                                    </div>
+                                )}
+                                
                                 {/* Hero Section - Two Column */}
                                 <div className="grid md:grid-cols-2 gap-12 items-center py-12">
                                     {/* Left: CTA */}
@@ -2912,64 +3111,138 @@ When the user asks about their pay, negotiation, or next steps — use these num
                     {/* Paywall */}
                     {showPaywall && (
                         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                            <div className="card max-w-2xl w-full p-10 fade-in">
-                                <div className="text-center mb-8">
-                                    <CoachCharacter size={120} />
+                            <div className="card max-w-2xl w-full p-10 fade-in relative">
+                                {/* Close button */}
+                                <button 
+                                    onClick={() => setShowPaywall(false)}
+                                    className="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center"
+                                >
+                                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+
+                                <div className="text-center mb-6">
+                                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                        </svg>
+                                    </div>
                                 </div>
-                                <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center">Unlock Your Full Potential</h2>
-                                <p className="text-gray-600 mb-10 text-center text-lg">
-                                    Get unlimited access to all tools and personalized coaching
+                                
+                                <h2 className="text-4xl font-bold text-gray-900 mb-4 text-center">Join the Free Beta</h2>
+                                <p className="text-gray-600 mb-8 text-center text-lg">
+                                    Get full access to CompCoach while we're in beta. No credit card required.
                                 </p>
 
-                                <div className="grid md:grid-cols-2 gap-6 mb-10">
-                                    <div className="card p-6 border-2 border-blue-500">
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Pro</h3>
-                                        <p className="text-sm text-gray-600 mb-4">Perfect for job seekers</p>
-                                        <p className="text-5xl font-bold gradient-text mb-6">$12<span className="text-lg">/mo</span></p>
-                                        <ul className="space-y-2 text-sm text-gray-700 mb-6">
-                                            <li>✓ Unlimited analyses</li>
-                                            <li>✓ Unlimited AI coaching</li>
-                                            <li>✓ Market intelligence</li>
-                                            <li>✓ Negotiation templates</li>
-                                        </ul>
+                                {!waitlistSubmitted ? (
+                                    <div>
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                                            <h3 className="font-bold text-gray-900 mb-3">Beta includes:</h3>
+                                            <ul className="space-y-2 text-sm text-gray-700">
+                                                <li className="flex items-start gap-2">
+                                                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                                    </svg>
+                                                    <span>Unlimited compensation analyses</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                                    </svg>
+                                                    <span>Unlimited AI coaching sessions</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                                    </svg>
+                                                    <span>Access to all tools and features</span>
+                                                </li>
+                                                <li className="flex items-start gap-2">
+                                                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                                    </svg>
+                                                    <span>Help shape the product with your feedback</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <div className="flex flex-col gap-3">
+                                            <input
+                                                type="email"
+                                                placeholder="Enter your email"
+                                                value={waitlistEmail}
+                                                onChange={(e) => setWaitlistEmail(e.target.value)}
+                                                onKeyPress={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        document.querySelector('.beta-signup-btn').click();
+                                                    }
+                                                }}
+                                                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            />
+                                            <button
+                                                className="btn-primary w-full beta-signup-btn"
+                                                onClick={async () => {
+                                                    if (!waitlistEmail || !waitlistEmail.includes('@')) {
+                                                        setWaitlistError('Please enter a valid email');
+                                                        return;
+                                                    }
+                                                    
+                                                    try {
+                                                        const response = await fetch('/api/waitlist', {
+                                                            method: 'POST',
+                                                            headers: { 'Content-Type': 'application/json' },
+                                                            body: JSON.stringify({ email: waitlistEmail, tier: 'beta' })
+                                                        });
+                                                        
+                                                        const data = await response.json();
+                                                        
+                                                        if (response.ok) {
+                                                            setWaitlistSubmitted(true);
+                                                            setWaitlistError('');
+                                                        } else {
+                                                            setWaitlistError(data.error || 'Failed to join. Please try again.');
+                                                        }
+                                                    } catch (err) {
+                                                        setWaitlistError('Network error. Please try again.');
+                                                    }
+                                                }}
+                                            >
+                                                Join Free Beta →
+                                            </button>
+                                            {waitlistError && (
+                                                <p className="text-red-600 text-sm text-center">{waitlistError}</p>
+                                            )}
+                                        </div>
+
+                                        <p className="text-xs text-gray-500 text-center mt-4">
+                                            Limited spots available. We'll email you within 24 hours with access details.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                                            <div className="flex items-center justify-center gap-2 text-green-800 mb-3">
+                                                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                                                </svg>
+                                                <span className="font-bold text-lg">You're on the beta list!</span>
+                                            </div>
+                                            <p className="text-green-700 mb-4">
+                                                We'll send beta access details to <strong>{waitlistEmail}</strong> within 24 hours.
+                                            </p>
+                                            <p className="text-sm text-green-600">
+                                                Check your inbox (and spam folder) for an email from CompCoach.
+                                            </p>
+                                        </div>
                                         <button
-                                            onClick={() => openCheckout('individual')}
-                                            className="w-full btn-primary"
-                                            disabled={checkoutLoading}
+                                            onClick={() => setShowPaywall(false)}
+                                            className="w-full btn-secondary mt-6"
                                         >
-                                            {checkoutLoading ? 'Loading...' : 'Start Pro'}
+                                            Close
                                         </button>
                                     </div>
-
-                                    <div className="card p-6 border-2 border-teal-500">
-                                        <h3 className="text-2xl font-bold text-gray-900 mb-2">Premium</h3>
-                                        <p className="text-sm text-gray-600 mb-4">Maximum insights</p>
-                                        <p className="text-5xl font-bold gradient-text mb-6">$25<span className="text-lg">/mo</span></p>
-                                        <ul className="space-y-2 text-sm text-gray-700 mb-6">
-                                            <li>✓ Everything in Pro</li>
-                                            <li>✓ Equity valuation tools</li>
-                                            <li>✓ Career planning</li>
-                                            <li>✓ Priority support</li>
-                                        </ul>
-                                        <button
-                                            onClick={() => openCheckout('premium')}
-                                            className="w-full bg-gradient-to-br from-teal-500 to-cyan-500 text-white py-3 px-6 rounded-xl font-bold hover:shadow-lg transition-all"
-                                            disabled={checkoutLoading}
-                                        >
-                                            {checkoutLoading ? 'Loading...' : 'Start Premium'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        if (!isSignedIn) { openSignUp(); }
-                                        setShowPaywall(false);
-                                    }}
-                                    className="w-full text-gray-600 hover:text-gray-900 font-semibold transition-colors"
-                                >
-                                    {isSignedIn ? 'Continue with Free →' : 'Sign Up Free →'}
-                                </button>
+                                )}
                             </div>
                         </div>
                     )}
