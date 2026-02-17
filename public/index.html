@@ -22,7 +22,6 @@
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
     <script
       data-clerk-publishable-key="pk_test_Z2VudWluZS1tYXJsaW4tMzEuY2xlcmsuYWNjb3VudHMuZGV2JA"
       src="https://genuine-marlin-31.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
@@ -896,51 +895,90 @@
             2029: { intended: { baseIncreasePct: "3", bonusTargetPct: "", refreshGrant: "" }, realized: { baseIncreasePct: "3", bonusTargetPct: "", unvestedEquity: "", refreshGrant: "" } },
         });
 
-        // Recharts components
-        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip: RTooltip, ResponsiveContainer } = Recharts;
+        // Pure CSS Stacked Bar Chart — no external chart library needed
+        const CompChart = ({ data, title, subtitle }) => {
+            const maxVal = Math.max(...data.map(d => (d.base || 0) + (d.bonus || 0) + (d.equity || 0)), 1);
+            const yTicks = [];
+            const step = Math.ceil(maxVal / 5 / 50000) * 50000 || 50000;
+            for (let v = 0; v <= maxVal + step; v += step) yTicks.push(v);
+            const chartMax = yTicks[yTicks.length - 1];
 
-        const CalcTooltip = ({ active, payload, label }) => {
-            if (!active || !payload?.length) return null;
-            const total = payload.reduce((s, p) => s + (p.value || 0), 0);
             return (
-                <div style={{ background: "white", border: "1px solid #e2e8f0", borderRadius: 12, padding: "14px 18px", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", fontFamily: "Poppins, sans-serif" }}>
-                    <p style={{ fontWeight: 700, fontSize: 14, color: "#1a202c", marginBottom: 8 }}>{label}</p>
-                    {payload.slice().reverse().map((p, i) => (
-                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                            <div style={{ width: 10, height: 10, borderRadius: 3, background: p.color, flexShrink: 0 }} />
-                            <span style={{ fontSize: 13, color: "#64748b", flex: 1 }}>{p.name}</span>
-                            <span style={{ fontSize: 13, fontWeight: 600, color: "#1a202c" }}>{calcFmt(p.value)}</span>
+                <div className="card overflow-hidden">
+                    <div style={{ background: "linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%)", padding: "20px 24px" }}>
+                        <h3 style={{ color: "white", fontWeight: 700, fontSize: 17, margin: 0 }}>{title}</h3>
+                        <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: "4px 0 0" }}>{subtitle}</p>
+                    </div>
+                    <div style={{ padding: "24px 20px 16px" }}>
+                        <div style={{ display: "flex", height: 320 }}>
+                            {/* Y-axis labels */}
+                            <div style={{ display: "flex", flexDirection: "column-reverse", justifyContent: "space-between", paddingBottom: 28, paddingRight: 10, width: 55, flexShrink: 0 }}>
+                                {yTicks.map((v) => (
+                                    <span key={v} style={{ fontSize: 11, color: "#94a3b8", fontWeight: 500, textAlign: "right" }}>
+                                        {v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`}
+                                    </span>
+                                ))}
+                            </div>
+                            {/* Bars area */}
+                            <div style={{ flex: 1, display: "flex", alignItems: "flex-end", gap: 6, borderLeft: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0", paddingBottom: 0, position: "relative" }}>
+                                {/* Horizontal grid lines */}
+                                {yTicks.map((v, i) => (
+                                    <div key={i} style={{
+                                        position: "absolute", left: 0, right: 0,
+                                        bottom: `${(v / chartMax) * 100}%`,
+                                        borderTop: "1px dashed #f1f5f9", pointerEvents: "none"
+                                    }} />
+                                ))}
+                                {data.map((d, i) => {
+                                    const total = (d.base || 0) + (d.bonus || 0) + (d.equity || 0);
+                                    const basePct = chartMax > 0 ? ((d.base || 0) / chartMax) * 100 : 0;
+                                    const bonusPct = chartMax > 0 ? ((d.bonus || 0) / chartMax) * 100 : 0;
+                                    const equityPct = chartMax > 0 ? ((d.equity || 0) / chartMax) * 100 : 0;
+                                    const isProjected = parseInt(d.year) >= 2026;
+
+                                    return (
+                                        <div key={d.year} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", position: "relative", zIndex: 1 }} className="group">
+                                            {/* Stacked bar */}
+                                            <div style={{ width: "60%", display: "flex", flexDirection: "column-reverse", minHeight: 2, transition: "all 0.3s", cursor: "pointer" }}>
+                                                <div style={{ height: `${basePct * 2.8}px`, background: CALC_COLORS.base, opacity: isProjected ? 0.7 : 1, transition: "height 0.4s ease" }} />
+                                                <div style={{ height: `${bonusPct * 2.8}px`, background: CALC_COLORS.bonus, opacity: isProjected ? 0.7 : 1, transition: "height 0.4s ease" }} />
+                                                <div style={{ height: `${equityPct * 2.8}px`, background: CALC_COLORS.equity, borderRadius: "6px 6px 0 0", opacity: isProjected ? 0.7 : 1, transition: "height 0.4s ease" }} />
+                                            </div>
+                                            {/* X-axis label */}
+                                            <span style={{ fontSize: 12, fontWeight: 600, color: "#64748b", marginTop: 8 }}>{d.year}</span>
+                                            {/* Hover tooltip */}
+                                            <div className="hidden group-hover:block" style={{
+                                                position: "absolute", bottom: "105%", left: "50%", transform: "translateX(-50%)",
+                                                background: "white", border: "1px solid #e2e8f0", borderRadius: 12,
+                                                padding: "12px 16px", boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
+                                                whiteSpace: "nowrap", zIndex: 50, minWidth: 180
+                                            }}>
+                                                <p style={{ fontWeight: 700, fontSize: 13, color: "#1a202c", marginBottom: 6 }}>{d.year}</p>
+                                                {[
+                                                    { label: "Equity", val: d.equity, color: CALC_COLORS.equity },
+                                                    { label: "Bonus", val: d.bonus, color: CALC_COLORS.bonus },
+                                                    { label: "Base Salary", val: d.base, color: CALC_COLORS.base },
+                                                ].map((item) => (
+                                                    <div key={item.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+                                                        <div style={{ width: 10, height: 10, borderRadius: 3, background: item.color, flexShrink: 0 }} />
+                                                        <span style={{ fontSize: 12, color: "#64748b", flex: 1 }}>{item.label}</span>
+                                                        <span style={{ fontSize: 12, fontWeight: 600, color: "#1a202c" }}>{calcFmt(item.val)}</span>
+                                                    </div>
+                                                ))}
+                                                <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 6, paddingTop: 6, display: "flex", justifyContent: "space-between" }}>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: "#1a202c" }}>Total Comp</span>
+                                                    <span style={{ fontSize: 12, fontWeight: 700, color: "#1a202c" }}>{calcFmt(total)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
-                    ))}
-                    <div style={{ borderTop: "1px solid #e2e8f0", marginTop: 8, paddingTop: 8, display: "flex", justifyContent: "space-between" }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#1a202c" }}>Total Comp</span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: "#1a202c" }}>{calcFmt(total)}</span>
                     </div>
                 </div>
             );
         };
-
-        const CompChart = ({ data, title, subtitle }) => (
-            <div className="card overflow-hidden">
-                <div style={{ background: "linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%)", padding: "20px 24px" }}>
-                    <h3 style={{ color: "white", fontWeight: 700, fontSize: 17, margin: 0 }}>{title}</h3>
-                    <p style={{ color: "rgba(255,255,255,0.8)", fontSize: 13, margin: "4px 0 0" }}>{subtitle}</p>
-                </div>
-                <div style={{ padding: "24px 16px 16px" }}>
-                    <ResponsiveContainer width="100%" height={340}>
-                        <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 5 }} barCategoryGap="22%">
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                            <XAxis dataKey="year" tick={{ fontSize: 12, fill: "#64748b", fontFamily: "Poppins", fontWeight: 600 }} axisLine={{ stroke: "#e2e8f0" }} tickLine={false} />
-                            <YAxis tickFormatter={calcFmtK} tick={{ fontSize: 11, fill: "#94a3b8", fontFamily: "Poppins" }} axisLine={false} tickLine={false} width={55} />
-                            <RTooltip content={<CalcTooltip />} cursor={{ fill: "rgba(45,125,210,0.06)" }} />
-                            <Bar dataKey="base" name="Base Salary" stackId="comp" fill={CALC_COLORS.base} radius={[0, 0, 0, 0]} />
-                            <Bar dataKey="bonus" name="Bonus" stackId="comp" fill={CALC_COLORS.bonus} radius={[0, 0, 0, 0]} />
-                            <Bar dataKey="equity" name="Equity" stackId="comp" fill={CALC_COLORS.equity} radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-        );
 
         const CalcNumInput = ({ label, value, onChange, prefix = "$", placeholder = "0", small = false }) => (
             <div>
