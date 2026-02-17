@@ -1146,7 +1146,7 @@
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="text-3xl font-bold text-gray-900">Compensation <span className="gradient-text">Calculator</span></h2>
+                                <h2 className="text-3xl font-bold text-gray-900">Compensation <span className="gradient-text">Progression Calculator</span></h2>
                             </div>
                         </div>
                         <p className="text-gray-600 text-base leading-relaxed max-w-2xl">
@@ -1449,6 +1449,20 @@
             const [bonusTarget, setBonusTarget] = useState('');
             const [annualEquity, setAnnualEquity] = useState('');
             const [analysisResult, setAnalysisResult] = useState(null);
+
+            // Analyzer mode: 'current' or 'offer'
+            const [analyzerMode, setAnalyzerMode] = useState('current');
+            const [signOnBonus, setSignOnBonus] = useState('');
+            const [equityType, setEquityType] = useState('RSUs');
+            const [vestingSchedule, setVestingSchedule] = useState('4-year with 1-year cliff');
+            const [otherBenefits, setOtherBenefits] = useState('');
+            const [offerText, setOfferText] = useState('');
+            const [offerFile, setOfferFile] = useState(null);
+            const [offerInputMode, setOfferInputMode] = useState('fields'); // 'fields', 'paste', 'upload'
+            const [offerAnalysis, setOfferAnalysis] = useState(null);
+            const [offerAnalyzing, setOfferAnalyzing] = useState(false);
+            const [offerError, setOfferError] = useState('');
+            const offerFileRef = useRef(null);
             
             // Chat state
             const [messages, setMessages] = useState([
@@ -2094,6 +2108,173 @@ If you want more money:
                 return 90 + Math.min(10, ((value - p90) / p90) * 10);
             };
 
+            // --- Offer Evaluation Functions ---
+            const handleOfferUpload = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                setOfferError('');
+                const allowedTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp', 'text/plain'];
+                if (!allowedTypes.includes(file.type)) { setOfferError('Please upload a PDF, image, or text file.'); return; }
+                if (file.size > 5 * 1024 * 1024) { setOfferError('File must be under 5MB.'); return; }
+                const reader = new FileReader();
+                reader.onload = () => { setOfferFile({ name: file.name, type: file.type, base64: reader.result.split(',')[1] }); };
+                reader.readAsDataURL(file);
+            };
+
+            const buildOfferPrompt = () => {
+                let prompt = `You are CompCoach.ai's Offer Evaluator — an expert compensation analyst. Analyze this job offer and provide a comprehensive, actionable evaluation.
+
+Your analysis MUST include these sections with specific numbers:
+
+## Offer Summary
+Restate the key components of the offer in a clean table format.
+
+## Market Comparison
+Compare each component (base, bonus, equity, sign-on) against market benchmarks for this role/level/location. State whether each component is below market, at market, or above market, and by how much.
+
+## Equity Deep Dive
+- Calculate the annualized equity value
+- Explain the vesting schedule implications
+- Note the difference between grant value and potential realized value
+- Flag any cliff risk
+
+## Total Compensation Breakdown
+- Year 1 TC (including sign-on)
+- Steady-state annual TC (years 2-4)
+- 4-year total TC
+
+## Strengths & Concerns
+What's strong about this offer and what's weak.
+
+## Negotiation Recommendations
+Provide 3 specific, prioritized recommendations with exact dollar amounts or percentages to ask for. Include sample language the candidate can use.
+
+## Verdict
+A clear overall assessment: Strong Offer, Fair Offer, or Below Market — with a one-line summary.
+
+Keep your analysis data-driven and specific. Use dollar amounts, not vague language.`;
+
+                // Add structured fields
+                const hasFields = jobTitle || currentSalary || company;
+                if (hasFields) {
+                    prompt += '\n\n--- OFFER DETAILS ---';
+                    if (company) prompt += `\nCompany: ${company}`;
+                    if (jobTitle) prompt += `\nJob Title: ${jobTitle}`;
+                    if (location) prompt += `\nLocation: ${location}`;
+                    if (level) prompt += `\nLevel: ${level}`;
+                    if (currentSalary) prompt += `\nBase Salary: $${currentSalary}`;
+                    if (bonusTarget) prompt += `\nBonus Target: ${bonusTarget}%`;
+                    if (signOnBonus) prompt += `\nSign-On Bonus: $${signOnBonus}`;
+                    if (annualEquity) prompt += `\nEquity: $${annualEquity} in ${equityType}, ${vestingSchedule}`;
+                    if (managementTrack) prompt += `\nTrack: ${managementTrack}`;
+                    if (yearsExp) prompt += `\nYears of Experience: ${yearsExp}`;
+                    if (otherBenefits) prompt += `\nOther Benefits/Notes: ${otherBenefits}`;
+                }
+
+                // Add market context from our data if available
+                const baseMarket = marketData[jobTitle];
+                if (baseMarket && level && location) {
+                    const locationMult = locationAdjustments[location] || 1.0;
+                    const levelMult = levelMultipliers[parseInt(level)] || 1.0;
+                    const trackMult = trackMultipliers[managementTrack] || 1.0;
+                    const totalMult = locationMult * levelMult * trackMult;
+                    prompt += `\n\n--- MARKET CONTEXT (from CompCoach database) ---`;
+                    prompt += `\nBase Salary P25: $${Math.round(baseMarket.p25 * totalMult).toLocaleString()}`;
+                    prompt += `\nBase Salary Median: $${Math.round(baseMarket.median * totalMult).toLocaleString()}`;
+                    prompt += `\nBase Salary P75: $${Math.round(baseMarket.p75 * totalMult).toLocaleString()}`;
+                    prompt += `\nBase Salary P90: $${Math.round(baseMarket.p90 * totalMult).toLocaleString()}`;
+                    prompt += `\nTypical Bonus: ${baseMarket.bonus_typical}% of base`;
+                    prompt += `\nTypical Annual Equity: $${Math.round(baseMarket.equity_typical * totalMult).toLocaleString()}`;
+                }
+
+                if (offerText.trim()) {
+                    prompt += `\n\n--- PASTED OFFER TEXT ---\n${offerText}`;
+                }
+
+                return prompt;
+            };
+
+            const runOfferAnalysis = async () => {
+                if (!isSignedIn) { openSignIn(); return; }
+
+                const hasFields = currentSalary || jobTitle || company;
+                const hasText = offerText.trim();
+                const hasFile = !!offerFile;
+                if (!hasFields && !hasText && !hasFile) {
+                    setOfferError('Please enter offer details, paste offer text, or upload an offer letter.');
+                    return;
+                }
+
+                setOfferAnalyzing(true);
+                setOfferError('');
+                setOfferAnalysis(null);
+
+                try {
+                    const token = await getAuthToken();
+                    const prompt = buildOfferPrompt();
+
+                    let userContent;
+                    if (hasFile) {
+                        if (offerFile.type === 'application/pdf') {
+                            userContent = [
+                                { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: offerFile.base64 } },
+                                { type: 'text', text: prompt + '\n\nI\'ve also uploaded the offer document. Please incorporate it into your analysis.' }
+                            ];
+                        } else if (offerFile.type.startsWith('image/')) {
+                            userContent = [
+                                { type: 'image', source: { type: 'base64', media_type: offerFile.type, data: offerFile.base64 } },
+                                { type: 'text', text: prompt + '\n\nI\'ve also uploaded an image of the offer. Please incorporate it into your analysis.' }
+                            ];
+                        } else {
+                            userContent = prompt;
+                        }
+                    } else {
+                        userContent = prompt;
+                    }
+
+                    const res = await fetch('/api/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({
+                            model: 'claude-sonnet-4-20250514',
+                            max_tokens: 2500,
+                            system: 'You are CompCoach.ai, an expert compensation analyst. Provide detailed, data-driven offer evaluations. Use markdown formatting with ## headers. Be specific with dollar amounts and percentages.',
+                            messages: [{ role: 'user', content: userContent }]
+                        })
+                    });
+
+                    if (!res.ok) {
+                        const errData = await res.json();
+                        throw new Error(errData.error || 'Failed to analyze offer');
+                    }
+
+                    const data = await res.json();
+                    const text = data.content?.[0]?.text || 'No analysis returned.';
+                    setOfferAnalysis(text);
+                } catch (err) {
+                    setOfferError(err.message || 'Something went wrong. Please try again.');
+                } finally {
+                    setOfferAnalyzing(false);
+                }
+            };
+
+            const renderOfferAnalysis = (text) => {
+                return text.split('\n').map((line, idx) => {
+                    if (line.startsWith('## ')) return <h2 key={idx} className="text-xl font-bold text-gray-900 mt-6 mb-3">{line.slice(3)}</h2>;
+                    if (line.startsWith('### ')) return <h3 key={idx} className="text-lg font-bold text-gray-900 mt-4 mb-2">{line.slice(4)}</h3>;
+                    if (line.startsWith('- ')) {
+                        const parts = line.slice(2).split('**');
+                        return <li key={idx} className="text-gray-700 leading-relaxed ml-5 mb-1">{parts.map((p, i) => i % 2 === 1 ? <strong key={i} className="font-bold text-gray-900">{p}</strong> : p)}</li>;
+                    }
+                    if (line.includes('**')) {
+                        const parts = line.split('**');
+                        return <p key={idx} className="text-gray-700 leading-relaxed mb-2">{parts.map((p, i) => i % 2 === 1 ? <strong key={i} className="font-bold text-gray-900">{p}</strong> : p)}</p>;
+                    }
+                    if (line.trim()) return <p key={idx} className="text-gray-700 leading-relaxed mb-2">{line}</p>;
+                    return null;
+                });
+            };
+
             const buildSystemPrompt = () => {
                 const today = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 
@@ -2432,7 +2613,7 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                     },
                                     { 
                                         id: 'calculator', 
-                                        label: 'Comp Calculator',
+                                        label: 'Progression Calculator',
                                         icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 20V10M18 20V4M6 20v-4"/></svg>
                                     },
                                     { 
@@ -2563,13 +2744,13 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                     <h2 className="text-3xl font-bold text-gray-900 mb-6">
                                         Your Compensation <span className="gradient-text">Toolkit</span>
                                     </h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                                         {[
                                             {
                                                 id: 'analyze',
                                                 title: 'Compensation Analyzer',
-                                                desc: 'See exactly where you stand in the market',
-                                                cta: 'Run Analysis',
+                                                desc: 'Benchmark your current pay or evaluate a new offer against market data',
+                                                cta: 'Start Analysis',
                                                 color1: '#1d4ed8', color2: '#0369a1',
                                                 svg: (
                                                     <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
@@ -2611,6 +2792,46 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                         <circle cx="133" cy="97" r="3" fill="white" opacity="0.7"/>
                                                         <circle cx="143" cy="97" r="3" fill="white" opacity="0.5"/>
                                                         <circle cx="153" cy="97" r="3" fill="white" opacity="0.3"/>
+                                                    </svg>
+                                                )
+                                            },
+                                            {
+                                                id: 'calculator',
+                                                title: 'Progression Calculator',
+                                                desc: 'Track intended vs. realized comp and project your earnings forward',
+                                                cta: 'Calculate Progression',
+                                                color1: '#7c3aed', color2: '#2d7dd2',
+                                                svg: (
+                                                    <svg viewBox="0 0 320 100" fill="none" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+                                                        {/* Left chart - Intended */}
+                                                        <text x="55" y="14" textAnchor="middle" fontSize="7" fontWeight="700" fill="white" opacity="0.7">INTENDED</text>
+                                                        <rect x="25" y="65" width="16" height="30" rx="2" fill="white" opacity="0.2"/>
+                                                        <rect x="25" y="50" width="16" height="15" rx="0" fill="white" opacity="0.3"/>
+                                                        <rect x="25" y="40" width="16" height="10" rx="2" fill="white" opacity="0.5"/>
+                                                        <rect x="47" y="55" width="16" height="40" rx="2" fill="white" opacity="0.2"/>
+                                                        <rect x="47" y="38" width="16" height="17" rx="0" fill="white" opacity="0.3"/>
+                                                        <rect x="47" y="26" width="16" height="12" rx="2" fill="white" opacity="0.5"/>
+                                                        <rect x="69" y="48" width="16" height="47" rx="2" fill="white" opacity="0.2"/>
+                                                        <rect x="69" y="28" width="16" height="20" rx="0" fill="white" opacity="0.3"/>
+                                                        <rect x="69" y="18" width="16" height="10" rx="2" fill="white" opacity="0.5"/>
+                                                        {/* VS divider */}
+                                                        <line x1="108" y1="10" x2="108" y2="95" stroke="white" strokeWidth="1" strokeDasharray="4 3" opacity="0.3"/>
+                                                        <text x="108" y="55" textAnchor="middle" fontSize="9" fontWeight="800" fill="white" opacity="0.6">vs</text>
+                                                        {/* Right chart - Realized */}
+                                                        <text x="160" y="14" textAnchor="middle" fontSize="7" fontWeight="700" fill="white" opacity="0.9">REALIZED</text>
+                                                        <rect x="130" y="60" width="16" height="35" rx="2" fill="white" opacity="0.25"/>
+                                                        <rect x="130" y="45" width="16" height="15" rx="0" fill="white" opacity="0.4"/>
+                                                        <rect x="130" y="30" width="16" height="15" rx="2" fill="white" opacity="0.65"/>
+                                                        <rect x="152" y="50" width="16" height="45" rx="2" fill="white" opacity="0.25"/>
+                                                        <rect x="152" y="30" width="16" height="20" rx="0" fill="white" opacity="0.4"/>
+                                                        <rect x="152" y="12" width="16" height="18" rx="2" fill="white" opacity="0.65"/>
+                                                        <rect x="174" y="42" width="16" height="53" rx="2" fill="white" opacity="0.25"/>
+                                                        <rect x="174" y="20" width="16" height="22" rx="0" fill="white" opacity="0.4"/>
+                                                        <rect x="174" y="5" width="16" height="15" rx="2" fill="white" opacity="0.65"/>
+                                                        {/* Arrow up */}
+                                                        <path d="M220 70 L220 30" stroke="white" strokeWidth="2.5" strokeLinecap="round" opacity="0.6"/>
+                                                        <path d="M215 36 L220 28 L225 36" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
+                                                        <text x="220" y="82" textAnchor="middle" fontSize="8" fontWeight="700" fill="white" opacity="0.6">+32%</text>
                                                     </svg>
                                                 )
                                             },
@@ -2794,11 +3015,33 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                         <CoachCharacter size={80} />
                                         <div>
                                             <h2 className="text-3xl font-bold text-gray-900 mb-2">Compensation Analyzer</h2>
-                                            <p className="text-gray-600">Let's see how your compensation stacks up</p>
+                                            <p className="text-gray-600">Benchmark your pay or evaluate a new offer</p>
                                         </div>
+                                    </div>
+
+                                    {/* Mode Toggle */}
+                                    <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
+                                        {[
+                                            { id: 'current', label: 'Analyze My Current Pay', icon: '📊' },
+                                            { id: 'offer', label: 'Evaluate a New Offer', icon: '📄' },
+                                        ].map(mode => (
+                                            <button
+                                                key={mode.id}
+                                                onClick={() => { setAnalyzerMode(mode.id); setOfferAnalysis(null); setOfferError(''); }}
+                                                className={`flex-1 py-3 px-4 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+                                                    analyzerMode === mode.id
+                                                        ? 'bg-white shadow-md text-gray-900'
+                                                        : 'text-gray-500 hover:text-gray-700'
+                                                }`}
+                                            >
+                                                <span>{mode.icon}</span>
+                                                <span>{mode.label}</span>
+                                            </button>
+                                        ))}
                                     </div>
                                     
                                     <div className="space-y-5">
+                                        {/* Shared fields */}
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-2">Job Title</label>
                                             <select
@@ -2943,17 +3186,152 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                             </div>
                                         </div>
 
-                                        <button
-                                            onClick={analyzeSalary}
-                                            className="w-full btn-primary py-4 text-lg"
-                                        >
-                                            Analyze Now →
-                                        </button>
+                                        {/* ─── Offer-only fields ─── */}
+                                        {analyzerMode === 'offer' && (
+                                            <div className="border-t-2 border-dashed border-gray-200 pt-5 space-y-5">
+                                                <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">Additional Offer Details</p>
+
+                                                <div className="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Sign-On Bonus</label>
+                                                        <div className="relative">
+                                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">$</span>
+                                                            <input type="number" value={signOnBonus} onChange={(e) => setSignOnBonus(e.target.value)} placeholder="25000"
+                                                                className="w-full pl-8 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="block text-sm font-semibold text-gray-700 mb-2">Equity Type</label>
+                                                        <select value={equityType} onChange={(e) => setEquityType(e.target.value)}
+                                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors">
+                                                            <option value="RSUs">RSUs</option>
+                                                            <option value="Stock Options (ISOs)">Stock Options (ISOs)</option>
+                                                            <option value="Stock Options (NSOs)">Stock Options (NSOs)</option>
+                                                            <option value="Phantom Equity">Phantom Equity</option>
+                                                            <option value="Other">Other</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Vesting Schedule</label>
+                                                    <select value={vestingSchedule} onChange={(e) => setVestingSchedule(e.target.value)}
+                                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors">
+                                                        <option value="4-year with 1-year cliff">4-year with 1-year cliff</option>
+                                                        <option value="4-year quarterly">4-year quarterly (no cliff)</option>
+                                                        <option value="4-year monthly">4-year monthly</option>
+                                                        <option value="3-year with 1-year cliff">3-year with 1-year cliff</option>
+                                                        <option value="Other">Other</option>
+                                                    </select>
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Other Benefits / Notes <span className="text-gray-400 text-xs font-normal">(Optional)</span></label>
+                                                    <textarea value={otherBenefits} onChange={(e) => setOtherBenefits(e.target.value)}
+                                                        placeholder="e.g. 401k 50% match up to 6%, ESPP 15% discount, unlimited PTO, $5k learning budget..."
+                                                        className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                                                        rows={3} />
+                                                </div>
+
+                                                {/* Paste / Upload section */}
+                                                <div className="bg-gray-50 rounded-xl p-5">
+                                                    <p className="text-sm font-bold text-gray-700 mb-3">Have an offer letter? Add it for a more detailed analysis.</p>
+                                                    <div className="flex gap-2 mb-4">
+                                                        {[
+                                                            { id: 'fields', label: 'Fields Only' },
+                                                            { id: 'paste', label: 'Paste Text' },
+                                                            { id: 'upload', label: 'Upload File' },
+                                                        ].map(tab => (
+                                                            <button key={tab.id} onClick={() => setOfferInputMode(tab.id)}
+                                                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                                                                    offerInputMode === tab.id ? 'bg-blue-500 text-white' : 'bg-white border border-gray-200 text-gray-500 hover:text-gray-700'
+                                                                }`}
+                                                            >{tab.label}</button>
+                                                        ))}
+                                                    </div>
+
+                                                    {offerInputMode === 'paste' && (
+                                                        <textarea value={offerText} onChange={(e) => setOfferText(e.target.value)}
+                                                            placeholder="Paste your offer letter or email here..."
+                                                            className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                                                            rows={8} style={{ resize: 'vertical' }} />
+                                                    )}
+
+                                                    {offerInputMode === 'upload' && (
+                                                        <div>
+                                                            <input type="file" ref={offerFileRef} onChange={handleOfferUpload} accept=".pdf,.png,.jpg,.jpeg,.webp,.txt" className="hidden" />
+                                                            {!offerFile ? (
+                                                                <div onClick={() => offerFileRef.current?.click()}
+                                                                    className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all">
+                                                                    <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-teal-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                                                        <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                                                        </svg>
+                                                                    </div>
+                                                                    <p className="text-sm font-semibold text-gray-700">Click to upload offer letter</p>
+                                                                    <p className="text-xs text-gray-400 mt-1">PDF, image, or text — Max 5MB</p>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+                                                                    <span className="text-xl">{offerFile.type === 'application/pdf' ? '📄' : '🖼️'}</span>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <p className="font-semibold text-gray-800 truncate text-sm">{offerFile.name}</p>
+                                                                        <p className="text-xs text-blue-600">Ready to analyze</p>
+                                                                    </div>
+                                                                    <button onClick={() => { setOfferFile(null); if (offerFileRef.current) offerFileRef.current.value = ''; }}
+                                                                        className="text-gray-400 hover:text-red-500 transition-colors">
+                                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {offerInputMode === 'fields' && (
+                                                        <p className="text-xs text-gray-400">The fields above will be used for your offer evaluation. Add paste or upload for a richer analysis.</p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Error display for offer mode */}
+                                        {offerError && (
+                                            <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+                                                <span className="text-red-500">⚠️</span>
+                                                <p className="text-sm text-red-700">{offerError}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Action button */}
+                                        {analyzerMode === 'current' ? (
+                                            <button
+                                                onClick={analyzeSalary}
+                                                className="w-full btn-primary py-4 text-lg"
+                                            >
+                                                Analyze Now →
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={runOfferAnalysis}
+                                                disabled={offerAnalyzing}
+                                                className="w-full btn-primary py-4 text-lg flex items-center justify-center gap-2"
+                                                style={{ opacity: offerAnalyzing ? 0.7 : 1 }}
+                                            >
+                                                {offerAnalyzing ? (
+                                                    <>
+                                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                                        Analyzing your offer...
+                                                    </>
+                                                ) : (
+                                                    'Evaluate My Offer →'
+                                                )}
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Results */}
-                                {analysisResult && (
+                                {/* Current Pay Results */}
+                                {analyzerMode === 'current' && analysisResult && (
                                     <div className="space-y-6 fade-in">
                                         <div className={`card p-8 border-l-4 ${
                                             analysisResult.assessment.includes('Below') ? 'border-red-500' :
@@ -3039,7 +3417,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                         <div className="card p-8">
                                             <h3 className="text-2xl font-bold text-gray-900 mb-6">Total Compensation</h3>
 
-                                            {/* Your TC highlighted */}
                                             <div className="mb-6 p-5 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl">
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-sm font-semibold text-gray-700">Your Total Compensation</span>
@@ -3047,7 +3424,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                 </div>
                                             </div>
 
-                                            {/* TC breakdown */}
                                             <div className="space-y-3 mb-6">
                                                 <div className="flex justify-between py-2">
                                                     <span className="text-gray-600">Base Salary</span>
@@ -3073,7 +3449,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                 </div>
                                             </div>
 
-                                            {/* TC percentile + compa-ratio */}
                                             <div className="grid grid-cols-2 gap-4 mb-6">
                                                 <div className="bg-gradient-to-br from-emerald-50 to-teal-50 p-5 rounded-xl">
                                                     <p className="text-xs text-gray-600 mb-2 font-semibold">TC Percentile</p>
@@ -3085,7 +3460,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                 </div>
                                             </div>
 
-                                            {/* TC market range */}
                                             <h4 className="text-sm font-bold text-gray-700 mb-3">Total Compensation Market Range</h4>
                                             <div className="space-y-2 mb-6">
                                                 {[
@@ -3101,7 +3475,6 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                 ))}
                                             </div>
 
-                                            {/* TC progress bar */}
                                             <div className="progress-bar mb-2">
                                                 <div className="progress-fill" style={{ width: `${Math.min(analysisResult.tcPercentile, 100)}%` }}></div>
                                             </div>
@@ -3116,6 +3489,52 @@ When the user asks about their pay, negotiation, or next steps — use these num
                                                     * Market typical values used for {[analysisResult.userBonusTarget === null && 'bonus', analysisResult.userAnnualEquity === null && 'equity'].filter(Boolean).join(' and ')}. Enter your actual figures above for a more precise total.
                                                 </p>
                                             )}
+                                        </div>
+
+                                        {/* CTA to switch to offer mode */}
+                                        <div className="card p-6 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+                                            <div className="flex items-center justify-between gap-4">
+                                                <div>
+                                                    <h4 className="font-bold text-gray-900">Have an offer to compare?</h4>
+                                                    <p className="text-sm text-gray-600 mt-1">Switch to Offer Evaluation mode to get a full AI-powered analysis with negotiation scripts.</p>
+                                                </div>
+                                                <button onClick={() => { setAnalyzerMode('offer'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                                                    className="btn-primary whitespace-nowrap px-6 py-2 text-sm">
+                                                    Evaluate an Offer →
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Offer Evaluation Results */}
+                                {analyzerMode === 'offer' && offerAnalysis && (
+                                    <div className="card overflow-hidden fade-in">
+                                        <div style={{ background: "linear-gradient(135deg, #2d7dd2 0%, #1ba098 100%)", padding: "20px 24px" }}>
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <h3 className="text-white font-bold text-lg">Offer Analysis</h3>
+                                                    <p className="text-white/70 text-sm">{company ? `${jobTitle || 'Role'} at ${company}` : 'Your offer evaluation'}</p>
+                                                </div>
+                                                <button onClick={() => setOfferAnalysis(null)} className="text-white/60 hover:text-white transition-colors">
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="p-8">
+                                            <div className="prose max-w-none">
+                                                {renderOfferAnalysis(offerAnalysis)}
+                                            </div>
+                                            <div className="mt-8 pt-6 border-t border-gray-100 flex flex-wrap gap-3">
+                                                <button onClick={() => navigator.clipboard.writeText(offerAnalysis)}
+                                                    className="btn-secondary text-sm py-2 px-4 flex items-center gap-2">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                                    Copy Analysis
+                                                </button>
+                                                <button onClick={() => setOfferAnalysis(null)} className="btn-secondary text-sm py-2 px-4">
+                                                    Evaluate Another Offer
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
