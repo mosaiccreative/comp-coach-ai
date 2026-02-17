@@ -247,7 +247,7 @@ app.get('/api/subscription', ClerkExpressRequireAuth(), async (req, res) => {
         .from('users')
         .insert({
           clerk_user_id: userId,
-          subscription_tier: 'free',
+          subscription_tier: 'premium', // Beta mode: everyone gets premium free
           subscription_status: 'active',
           usage_count: 0
         })
@@ -260,7 +260,7 @@ app.get('/api/subscription', ClerkExpressRequireAuth(), async (req, res) => {
       }
 
       return res.json({
-        tier: 'free',
+        tier: 'premium',
         status: 'active',
         usage_count: 0
       });
